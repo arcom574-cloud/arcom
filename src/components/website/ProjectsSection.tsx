@@ -34,7 +34,7 @@ function MobileProjects({ projects }: { projects: Project[] }) {
     <section style={{ backgroundColor: '#050A14', padding: '40px 0 100px' }}>
       <div style={{ textAlign: 'center', padding: '0 24px 32px' }}>
         <p style={{ color: '#4A90D9', fontSize: '10px', letterSpacing: '5px', marginBottom: '12px' }}>OUR PROJECTS</p>
-        <h2 style={{ fontSize: '32px', fontWeight: 800, color: 'white', margin: 0 }}>أبرز مشاريعنا</h2>
+        <h2 style={{ fontSize: '32px', fontWeight: 800, color: 'white', margin: 0 }}>{isAr ? 'أبرز مشاريعنا' : 'Our Projects'}</h2>
       </div>
 
       <div style={{ position: 'relative', height: '280px', overflow: 'hidden' }}>
@@ -56,7 +56,7 @@ function MobileProjects({ projects }: { projects: Project[] }) {
           {isAr ? projects[active]?.desc_ar : projects[active]?.desc_en}
         </p>
         <Link href={`/${locale}/projects/${projects[active]?.slug}`} style={{ display: 'block', backgroundColor: '#1B4B8A', color: 'white', padding: '14px', borderRadius: '12px', textDecoration: 'none', fontSize: '14px', fontWeight: 700, textAlign: 'center', boxShadow: '0 8px 32px rgba(27,75,138,0.4)', marginBottom: '24px' }}>
-          عرض المشروع ←
+          {isAr ? 'عرض المشروع ←' : '→ View Project'}
         </Link>
       </div>
 
@@ -105,7 +105,7 @@ function DesktopProjects({ projects }: { projects: Project[] }) {
     <section ref={sectionRef} style={{ backgroundColor: '#050A14' }}>
       <div style={{ textAlign: 'center', padding: '100px 32px 60px' }}>
         <p style={{ color: '#4A90D9', fontSize: '11px', letterSpacing: '5px', marginBottom: '16px' }}>OUR PROJECTS</p>
-        <h2 style={{ fontSize: '52px', fontWeight: 800, color: 'white', margin: 0 }}>أبرز مشاريعنا</h2>
+        <h2 style={{ fontSize: '52px', fontWeight: 800, color: 'white', margin: 0 }}>{isAr ? 'أبرز مشاريعنا' : 'Our Projects'}</h2>
       </div>
 
       {projects.map((p, i) => (
