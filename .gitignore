@@ -44,3 +44,5 @@ next-env.d.ts
 *.sql
 *.pdf
 New Text Document.txt
+
+.vercel

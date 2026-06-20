@@ -239,7 +239,7 @@ export default function LeadDetailPage() {
   };
 
   const parseChatMessages = (notes: string) => {
-    const text = notes.replace(/^.*?تفاصيل المحادثة:\s*/s, '');
+    const text = notes.replace(/^[\s\S]*?تفاصيل المحادثة:\s*/, '');
     const messages: { isBot: boolean; text: string }[] = [];
     const parts = text.split(/(كريم:|العميل:)/);
     for (let j = 1; j < parts.length; j += 2) {

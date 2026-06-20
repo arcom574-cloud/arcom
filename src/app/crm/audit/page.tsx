@@ -103,7 +103,7 @@ export default function AuditLogPage() {
   };
 
   return (
-    <div style={{ padding: '40px', color: 'white', fontFamily: 'Cairo, sans-serif', direction: dir }}>
+    <div style={{ padding: '40px', color: 'white', fontFamily: 'Cairo, sans-serif', direction: dir as any }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '28px', fontWeight: 800, margin: '0 0 8px' }}>

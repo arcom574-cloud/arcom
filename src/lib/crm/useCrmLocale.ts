@@ -20,7 +20,7 @@ export function useCrmLocale() {
   };
 
   const isAr = locale === 'ar';
-  const dir = isAr ? 'rtl' : 'ltr';
+  const dir: 'rtl' | 'ltr' = isAr ? 'rtl' : 'ltr';
 
   return { locale, setLocale, toggleLocale, isAr, dir };
 }

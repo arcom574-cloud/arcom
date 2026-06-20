@@ -92,7 +92,7 @@ export default function ActivityPage() {
   const isAr = locale === 'ar';
 
   return (
-    <div style={{ padding: '32px', direction: dir }}>
+    <div style={{ padding: '32px', direction: dir as any }}>
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ color: 'white', fontSize: '24px', fontWeight: 700, margin: '0 0 4px' }}>
@@ -109,7 +109,7 @@ export default function ActivityPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={isAr ? '\u{1F50D} بحث باسم الليد...' : '\u{1F50D} Search by lead name...'}
-          style={{ padding: '10px 16px', borderRadius: '10px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '14px', fontFamily: 'Cairo, sans-serif', outline: 'none', minWidth: '220px', direction: dir }}
+          style={{ padding: '10px 16px', borderRadius: '10px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '14px', fontFamily: 'Cairo, sans-serif', outline: 'none', minWidth: '220px', direction: dir as any }}
         />
         <select
           value={filterType}
