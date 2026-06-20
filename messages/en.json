@@ -1,0 +1,21 @@
+{
+  "nav": {
+    "projects": "Projects",
+    "about": "About Us",
+    "contact": "Contact",
+    "whatsapp": "WhatsApp"
+  },
+  "hero": {
+    "tag": "PREMIUM REAL ESTATE",
+    "title1": "Building",
+    "title2": "Your Future",
+    "subtitle": "A premium real estate developer offering the best residential and commercial projects in Egypt with the highest quality standards",
+    "btn1": "Explore Projects",
+    "btn2": "Contact Us"
+  },
+  "stats": {
+    "years": "Years Experience",
+    "projects": "Projects Done",
+    "clients": "Happy Clients"
+  }
+}
