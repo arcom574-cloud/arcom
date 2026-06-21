@@ -52,7 +52,7 @@ const emptyLead = {
 
 export default function LeadsPage() {
   const { locale, dir } = useCrmLocale();
-  const { branchFilter, refreshKey } = useBranch();
+  const { branchFilter, refreshKey, branches } = useBranch();
   const statusLabels = getStatusLabel(locale);
   const sourceLabels = getSourceLabel(locale);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -659,7 +659,10 @@ export default function LeadsPage() {
                 <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>{locale === 'ar' ? 'تحويل إلى' : 'Transfer to'}</label>
                 <select value={transferTo} onChange={e => setTransferTo(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
                   <option value="" style={{ backgroundColor: '#0A0F1A' }}>{locale === 'ar' ? 'اختر أدمن' : 'Select Admin'}</option>
-                  {users.filter(u => u.role === 'admin').map(u => <option key={u.id} value={u.id} style={{ backgroundColor: '#0A0F1A' }}>🛡️ {u.name}</option>)}
+                  {users.filter(u => u.role === 'admin').map(u => {
+                    const branchName = branches.length > 0 ? branches.find((b: any) => b.id === u.branch_id)?.name || '' : '';
+                    return <option key={u.id} value={u.id} style={{ backgroundColor: '#0A0F1A' }}>🛡️ {u.name} {branchName ? `(${branchName})` : ''}</option>;
+                  })}
                 </select>
               </div>
               {showTransfer !== 'bulk' && (
@@ -736,9 +739,10 @@ export default function LeadsPage() {
                 <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>{locale === 'ar' ? 'تحويل لأدمن' : 'Assign to Admin'}</label>
                 <select value={bulkTransferTo} onChange={e => setBulkTransferTo(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
                   <option value="" style={{ backgroundColor: '#0A0F1A' }}>{locale === 'ar' ? 'اختر أدمن' : 'Select Admin'}</option>
-                  {users.filter(u => u.role === 'admin').map(u => (
-                    <option key={u.id} value={u.id} style={{ backgroundColor: '#0A0F1A' }}>🛡️ {u.name}</option>
-                  ))}
+                  {users.filter(u => u.role === 'admin').map(u => {
+                    const branchName = branches.length > 0 ? branches.find((b: any) => b.id === u.branch_id)?.name || '' : '';
+                    return <option key={u.id} value={u.id} style={{ backgroundColor: '#0A0F1A' }}>🛡️ {u.name} {branchName ? `(${branchName})` : ''}</option>;
+                  })}
                 </select>
               </div>
             </div>
