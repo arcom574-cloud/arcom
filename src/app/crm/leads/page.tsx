@@ -6,6 +6,7 @@ import { useCrmLocale } from '@/lib/crm/useCrmLocale';
 import { t, getStatusLabel, getSourceLabel } from '@/lib/crm/translations';
 import { useBranch } from '@/lib/crm/useBranch';
 
+
 type Lead = {
   id: string; name: string; phone: string; email: string;
   project_interest: string; source: string; status: string;
@@ -51,7 +52,7 @@ const emptyLead = {
 
 export default function LeadsPage() {
   const { locale, dir } = useCrmLocale();
-  const { branchFilter } = useBranch();
+  const { branchFilter, refreshKey } = useBranch();
   const statusLabels = getStatusLabel(locale);
   const sourceLabels = getSourceLabel(locale);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -97,11 +98,8 @@ export default function LeadsPage() {
       const { data: teamMembers } = await supabaseAdmin.from('crm_users').select('id').eq('managed_by', u.id);
       const teamIds = [u.id, ...(teamMembers || []).map((t: any) => t.id)];
       query = query.in('assigned_to', teamIds);
-    } else if (u.role === 'superadmin') {
-      const savedBranch = localStorage.getItem('crm_selected_branch');
-      if (savedBranch && savedBranch !== 'all') {
-        query = query.eq('branch_id', savedBranch);
-      }
+    } else if (u.role === 'superadmin' && branchFilter) {
+      query = query.eq('branch_id', branchFilter);
     }
 
     const { data } = await query;
@@ -134,7 +132,7 @@ export default function LeadsPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [refreshKey]);
 
   const handleAdd = async () => {
     if (!form.name || !form.phone) return;

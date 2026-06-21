@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export type Branch = { id: string; name: string; };
@@ -9,33 +9,49 @@ export function useBranch() {
   const [selectedBranch, setSelectedBranchState] = useState<string>('all');
   const [userBranch, setUserBranch] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>('');
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const loadBranch = useCallback(() => {
+    const stored = localStorage.getItem('crm_user');
+    if (!stored) return;
+    const user = JSON.parse(stored);
+    setUserRole(user.role);
+    setUserBranch(user.branch_id || null);
+
+    if (user.role === 'superadmin') {
+      const saved = localStorage.getItem('crm_selected_branch');
+      setSelectedBranchState(saved || 'all');
+    } else {
+      setSelectedBranchState(user.branch_id || 'all');
+    }
+  }, []);
 
   useEffect(() => {
-    const load = async () => {
+    const loadAll = async () => {
+      loadBranch();
       const stored = localStorage.getItem('crm_user');
       if (!stored) return;
       const user = JSON.parse(stored);
-      setUserRole(user.role);
-      setUserBranch(user.branch_id || null);
-
       if (user.role === 'superadmin') {
         const { data } = await supabaseAdmin.from('branches').select('*').order('created_at');
         if (data) setBranches(data);
-        const savedBranch = localStorage.getItem('crm_selected_branch');
-        if (savedBranch) setSelectedBranchState(savedBranch);
-      } else {
-        setSelectedBranchState(user.branch_id || 'all');
       }
     };
-    load();
+    loadAll();
   }, []);
 
-  const setSelectedBranch = (id: string) => {
-    setSelectedBranchState(id);
-    localStorage.setItem('crm_selected_branch', id);
-  };
+  useEffect(() => {
+    const handler = () => {
+      loadBranch();
+      setRefreshKey(k => k + 1);
+    };
+    window.addEventListener('branch-changed', handler);
+    return () => window.removeEventListener('branch-changed', handler);
+  }, [loadBranch]);
 
-  const branchFilter = userRole === 'superadmin' ? selectedBranch : userBranch;
+  const branchFilter = userRole === 'superadmin'
+    ? (selectedBranch === 'all' ? null : selectedBranch)
+    : userBranch;
 
-  return { branches, selectedBranch, setSelectedBranch, userBranch, branchFilter, userRole };
+  return { branches, selectedBranch, branchFilter, userBranch, userRole, refreshKey };
 }

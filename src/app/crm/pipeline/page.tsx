@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabaseAdmin } from '@/lib/supabase';
 import { useCrmLocale } from '@/lib/crm/useCrmLocale';
+import { useBranch } from '@/lib/crm/useBranch';
 import { t, getStatusLabel, getSourceLabel } from '@/lib/crm/translations';
 
 type Lead = {
@@ -23,6 +24,7 @@ const columns = [
 
 export default function PipelinePage() {
   const { locale, dir } = useCrmLocale();
+  const { branchFilter, refreshKey } = useBranch();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [dragging, setDragging] = useState<string | null>(null);
@@ -38,12 +40,18 @@ export default function PipelinePage() {
       let query = supabaseAdmin.from('leads').select('*, crm_users(name)').order('created_at', { ascending: false });
       if (u.role === 'sales') query = query.eq('assigned_to', u.id);
 
+      const stored2 = localStorage.getItem('crm_user');
+      const u2 = stored2 ? JSON.parse(stored2) : null;
+      if (u2?.role === 'superadmin' && branchFilter) {
+        query = query.eq('branch_id', branchFilter);
+      }
+
       const { data } = await query;
       if (data) setLeads(data);
       setLoading(false);
     };
     load();
-  }, []);
+  }, [refreshKey]);
 
   const handleDrop = async (status: string, leadId: string) => {
     const stored = localStorage.getItem('crm_user');

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabaseAdmin } from '@/lib/supabase';
 import { useCrmLocale } from '@/lib/crm/useCrmLocale';
+import { useBranch } from '@/lib/crm/useBranch';
 import { t } from '@/lib/crm/translations';
 
 type Visit = {
@@ -22,6 +23,7 @@ const visitStatus: Record<string, { label: string; color: string }> = {
 
 export default function VisitsPage() {
   const { locale, dir } = useCrmLocale();
+  const { branchFilter, refreshKey } = useBranch();
   const [visits, setVisits] = useState<Visit[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
@@ -64,7 +66,7 @@ export default function VisitsPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [refreshKey]);
 
   const handleSave = async () => {
     if (!form.lead_id || !form.visit_date) return;

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabaseAdmin } from '@/lib/supabase';
 import * as XLSX from 'xlsx';
 import { useCrmLocale } from '@/lib/crm/useCrmLocale';
+import { useBranch } from '@/lib/crm/useBranch';
 import { t } from '@/lib/crm/translations';
 
 type Lead = {
@@ -30,6 +31,7 @@ export default function ReportsPage() {
   const [projects, setProjects] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
   const { locale, dir } = useCrmLocale();
+  const { branchFilter, refreshKey } = useBranch();
 
   useEffect(() => {
     const stored = localStorage.getItem('crm_user');
@@ -38,7 +40,11 @@ export default function ReportsPage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabaseAdmin.from('leads').select('*, crm_users(name)').order('created_at', { ascending: false });
+      let leadsQuery = supabaseAdmin.from('leads').select('*, crm_users(name)').order('created_at', { ascending: false });
+      if (currentUser?.role === 'superadmin' && branchFilter) {
+        leadsQuery = leadsQuery.eq('branch_id', branchFilter);
+      }
+      const { data } = await leadsQuery;
       if (data) setLeads(data);
       const { data: usersData } = await supabaseAdmin.from('crm_users').select('id, name, role, managed_by').eq('active', true);
       if (usersData) setUsers(usersData);
@@ -56,7 +62,7 @@ export default function ReportsPage() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [refreshKey]);
 
   const filterByPeriod = (data: Lead[]) => {
     if (period === 'all') return data;

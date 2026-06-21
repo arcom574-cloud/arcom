@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabaseAdmin } from '@/lib/supabase';
 import Link from 'next/link';
 import { useCrmLocale } from '@/lib/crm/useCrmLocale';
+import { useBranch } from '@/lib/crm/useBranch';
 import { t } from '@/lib/crm/translations';
 
 type Activity = {
@@ -51,6 +52,7 @@ function timeAgo(dateStr: string, locale: 'ar' | 'en'): string {
 
 export default function ActivityPage() {
   const { locale, dir } = useCrmLocale();
+  const { branchFilter, refreshKey } = useBranch();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('all');
@@ -73,7 +75,7 @@ export default function ActivityPage() {
     const { data } = await query;
     if (data) setActivities(data);
     setLoading(false);
-  }, [filterType]);
+  }, [filterType, refreshKey]);
 
   useEffect(() => { load(); }, [load]);
 

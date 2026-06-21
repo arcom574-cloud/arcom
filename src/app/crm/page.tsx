@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabaseAdmin } from '@/lib/supabase';
 import { useCrmLocale } from '@/lib/crm/useCrmLocale';
+import { useBranch } from '@/lib/crm/useBranch';
 import { t, getStatusLabel } from '@/lib/crm/translations';
 
 type Lead = {
@@ -52,6 +53,7 @@ export default function CRMDashboard() {
   const [branches, setBranches] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const { locale, dir } = useCrmLocale();
+  const { branchFilter, refreshKey } = useBranch();
 
   useEffect(() => {
     const stored = localStorage.getItem('crm_user');
@@ -177,7 +179,7 @@ export default function CRMDashboard() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [refreshKey]);
 
   const totalDealValue = leads.filter(l => l.status === 'closed_won').reduce((s, l) => s + (l.deal_value || 0), 0);
   const totalPipeline = leads.filter(l => !['closed_won', 'closed_lost'].includes(l.status)).reduce((s, l) => s + (l.deal_value || 0) * (stageWeight[l.status] || 0), 0);

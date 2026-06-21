@@ -6,7 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import Notifications from '@/components/crm/Notifications';
 import { useCrmLocale } from '@/lib/crm/useCrmLocale';
 import { t } from '@/lib/crm/translations';
-import { useBranch } from '@/lib/crm/useBranch';
+import { BranchProvider, useBranchContext } from '@/lib/crm/BranchContext';
 
 type User = {
   id: string; name: string; email: string; role: string;
@@ -32,7 +32,29 @@ const navItems = [
 export default function CRMLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { locale, toggleLocale, isAr, dir } = useCrmLocale();
-  const { branches, selectedBranch, setSelectedBranch } = useBranch();
+  const [branches, setBranches] = useState<any[]>([]);
+  const [selectedBranch, setSelectedBranchState] = useState('all');
+
+  useEffect(() => {
+    const loadBranches = async () => {
+      const stored = localStorage.getItem('crm_user');
+      if (!stored) return;
+      const u = JSON.parse(stored);
+      if (u.role === 'superadmin') {
+        const { data } = await supabaseAdmin.from('branches').select('*').order('created_at');
+        if (data) setBranches(data);
+        const saved = localStorage.getItem('crm_selected_branch');
+        if (saved) setSelectedBranchState(saved);
+      }
+    };
+    loadBranches();
+  }, []);
+
+  const setSelectedBranch = (id: string) => {
+    setSelectedBranchState(id);
+    localStorage.setItem('crm_selected_branch', id);
+    window.dispatchEvent(new Event('branch-changed'));
+  };
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });

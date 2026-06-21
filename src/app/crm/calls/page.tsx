@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabaseAdmin } from '@/lib/supabase';
 import Link from 'next/link';
 import { useCrmLocale } from '@/lib/crm/useCrmLocale';
+import { useBranch } from '@/lib/crm/useBranch';
 import { t } from '@/lib/crm/translations';
 
 type Call = {
@@ -15,6 +16,7 @@ type Call = {
 
 export default function CallsPage() {
   const { locale, dir } = useCrmLocale();
+  const { branchFilter, refreshKey } = useBranch();
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -37,7 +39,7 @@ export default function CallsPage() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [refreshKey]);
 
   const filtered = calls.filter(c =>
     (c.leads as any)?.name?.includes(search) ||
