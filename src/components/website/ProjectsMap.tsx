@@ -247,20 +247,19 @@ export default function ProjectsMap() {
                 {isAr ? 'اضغط على مشروع لعرض موقعه' : 'Click a project to view its location'}
               </p>
             )}
-            <div style={isMobile ? { display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '10px', scrollSnapType: 'x mandatory' } : { display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={isMobile ? { display: 'grid', gridTemplateColumns: `repeat(${projects.length}, 1fr)`, gap: '8px' } : { display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {projects.map(p => (
                 <div key={p.id} onClick={() => handleProjectClick(p)}
-                  style={{ display: 'flex', gap: isMobile ? '10px' : '14px', alignItems: 'center', padding: isMobile ? '12px' : '14px 16px', borderRadius: isMobile ? '12px' : '16px', cursor: 'pointer', transition: 'all 0.3s', backgroundColor: active === p.id ? 'rgba(27,75,138,0.25)' : 'rgba(255,255,255,0.03)', border: `1px solid ${active === p.id ? 'rgba(74,144,217,0.5)' : 'rgba(255,255,255,0.06)'}`, ...(isMobile ? { minWidth: '220px', flexShrink: 0, scrollSnapAlign: 'start' } : {}) }}
+                  style={{ display: 'flex', gap: isMobile ? '8px' : '14px', alignItems: 'center', padding: isMobile ? '10px' : '14px 16px', borderRadius: isMobile ? '10px' : '16px', cursor: 'pointer', transition: 'all 0.3s', backgroundColor: active === p.id ? 'rgba(27,75,138,0.25)' : 'rgba(255,255,255,0.03)', border: `1px solid ${active === p.id ? 'rgba(74,144,217,0.5)' : 'rgba(255,255,255,0.06)'}` }}
                 >
                   {p.img ? (
-                    <img src={p.img} alt="" style={{ width: isMobile ? '44px' : '52px', height: isMobile ? '44px' : '52px', borderRadius: isMobile ? '10px' : '12px', objectFit: 'cover', flexShrink: 0, border: active === p.id ? '2px solid rgba(74,144,217,0.5)' : '2px solid transparent' }} />
+                    <img src={p.img} alt="" style={{ width: isMobile ? '36px' : '52px', height: isMobile ? '36px' : '52px', borderRadius: isMobile ? '8px' : '12px', objectFit: 'cover', flexShrink: 0, border: active === p.id ? '2px solid rgba(74,144,217,0.5)' : '2px solid transparent' }} />
                   ) : (
-                    <div style={{ width: isMobile ? '44px' : '52px', height: isMobile ? '44px' : '52px', borderRadius: isMobile ? '10px' : '12px', backgroundColor: 'rgba(74,144,217,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '16px' : '20px', flexShrink: 0 }}>🏢</div>
+                    <div style={{ width: isMobile ? '36px' : '52px', height: isMobile ? '36px' : '52px', borderRadius: isMobile ? '8px' : '12px', backgroundColor: 'rgba(74,144,217,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '14px' : '20px', flexShrink: 0 }}>🏢</div>
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: '#4A90D9', fontSize: isMobile ? '9px' : '10px', letterSpacing: '1px', marginBottom: '2px' }}>{p.type}</div>
-                    <div style={{ color: 'white', fontSize: isMobile ? '13px' : '15px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
-                    <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: isMobile ? '10px' : '11px', marginTop: '2px' }}>📍 {p.location}</div>
+                    <div style={{ color: 'white', fontSize: isMobile ? '11px' : '15px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: isMobile ? '9px' : '11px' }}>📍 {p.location}</div>
                   </div>
                   {!isMobile && <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: active === p.id ? '#4A90D9' : 'rgba(255,255,255,0.1)', boxShadow: active === p.id ? '0 0 12px #4A90D9' : 'none', transition: 'all 0.3s', flexShrink: 0 }} />}
                 </div>
