@@ -199,6 +199,7 @@ export default function CRMDashboard() {
 
   const isSuperAdmin = user?.role === 'superadmin';
   const isSales = user?.role === 'sales';
+  const isHeadSales = user?.role === 'head_sales';
   const wonLeads = leads.filter(l => l.status === 'closed_won');
   const conversionRate = leads.length > 0 ? Math.round((wonLeads.length / leads.length) * 100) : 0;
 
@@ -207,7 +208,7 @@ export default function CRMDashboard() {
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: 800, margin: '0 0 8px' }}>{t('welcome', locale)} {user?.name} 👋</h1>
         <p style={{ color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-          {isSuperAdmin ? t('overview_all', locale) : user?.role === 'admin' ? t('overview_team', locale) : t('overview_personal', locale)}
+          {isSuperAdmin ? t('overview_all', locale) : user?.role === 'admin' ? t('overview_team', locale) : isHeadSales ? (locale === 'ar' ? 'متابعة أداء فريق المبيعات' : 'Sales Team Performance Monitoring') : t('overview_personal', locale)}
         </p>
       </div>
 
@@ -255,6 +256,69 @@ export default function CRMDashboard() {
           ))}
         </div>
       </div>
+
+      {/* Head of Sales - Sales Monitoring Dashboard */}
+      {isHeadSales && salesPerf.length > 0 && (
+        <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(230,126,34,0.2)', borderRadius: '20px', overflow: 'hidden', marginBottom: '24px' }}>
+          <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', backgroundColor: 'rgba(230,126,34,0.06)' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 4px', color: '#E67E22' }}>📊 {locale === 'ar' ? 'متابعة أداء السيلز' : 'Sales Team Monitoring'}</h2>
+            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>{salesPerf.length} {locale === 'ar' ? 'سيلز في فرعك' : 'sales reps in your branch'}</p>
+          </div>
+          <div style={{ padding: '12px' }}>
+            {salesPerf.map((s, i) => {
+              const target = targets.find(tg => tg.user_id === s.id);
+              const targetPct = target?.target_amount && target.target_amount > 0 ? Math.min(Math.round((s.wonValue / target.target_amount) * 100), 100) : null;
+              const salesLeads = leads.filter(l => l.assigned_to === s.id);
+              const statusCounts: Record<string, number> = {};
+              salesLeads.forEach(l => { statusCounts[l.status] = (statusCounts[l.status] || 0) + 1; });
+
+              return (
+                <div key={s.id} style={{ padding: '14px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '16px', fontWeight: 700, color: i === 0 ? '#FFC800' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'rgba(255,255,255,0.3)' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}</span>
+                      <div>
+                        <p style={{ fontSize: '15px', fontWeight: 700, color: 'white', margin: 0 }}>{s.name}</p>
+                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>{s.total} {locale === 'ar' ? 'ليد' : 'leads'} · {s.won} {locale === 'ar' ? 'مبيعة' : 'won'} · {s.conversionRate}%</p>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{ fontSize: '16px', fontWeight: 800, color: '#00ff88', margin: 0 }}>{s.wonValue.toLocaleString()}</p>
+                      <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', margin: 0 }}>{t('egp', locale)}</p>
+                    </div>
+                  </div>
+
+                  {/* Lead stages breakdown */}
+                  <div style={{ display: 'flex', gap: '4px', marginBottom: targetPct !== null ? '8px' : '0' }}>
+                    {stages.filter(st => statusCounts[st.key]).map(st => (
+                      <div key={st.key} style={{ flex: statusCounts[st.key], height: '6px', borderRadius: '3px', backgroundColor: st.color, minWidth: '4px' }} title={`${st.label}: ${statusCounts[st.key]}`} />
+                    ))}
+                    {salesLeads.length === 0 && <div style={{ flex: 1, height: '6px', borderRadius: '3px', backgroundColor: 'rgba(255,255,255,0.05)' }} />}
+                  </div>
+                  {salesLeads.length > 0 && (
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: targetPct !== null ? '8px' : '0' }}>
+                      {stages.filter(st => statusCounts[st.key]).map(st => (
+                        <span key={st.key} style={{ fontSize: '9px', color: st.color }}>{statusCounts[st.key]} {st.label}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Target */}
+                  {targetPct !== null && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', minWidth: '35px' }}>🎯</span>
+                      <div style={{ flex: 1, height: '5px', borderRadius: '50px', backgroundColor: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', borderRadius: '50px', backgroundColor: targetPct >= 100 ? '#00ff88' : targetPct >= 50 ? '#F39C12' : '#ff4444', width: `${targetPct}%` }} />
+                      </div>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: targetPct >= 100 ? '#00ff88' : targetPct >= 50 ? '#F39C12' : '#ff4444', minWidth: '30px' }}>{targetPct}%</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Target Tracking */}
       {!isSales && targets.length > 0 && (

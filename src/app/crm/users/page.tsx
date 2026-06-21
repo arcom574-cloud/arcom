@@ -97,10 +97,11 @@ export default function UsersPage() {
           ? branches.map(b => ({
               branch: b,
               admins: users.filter(u => u.role === 'admin' && u.branch_id === b.id),
+              headSales: users.filter(u => u.role === 'head_sales' && u.branch_id === b.id),
               sales: users.filter(u => u.role === 'sales' && u.branch_id === b.id),
             }))
-          : [{ branch: { id: 'none', name: locale === 'ar' ? 'بدون فرع' : 'No Branch' }, admins: users.filter(u => u.role === 'admin'), sales: users.filter(u => u.role === 'sales') }];
-        const unassigned = users.filter(u => u.role !== 'superadmin' && !u.branch_id && branches.length > 0);
+          : [{ branch: { id: 'none', name: locale === 'ar' ? 'بدون فرع' : 'No Branch' }, admins: users.filter(u => u.role === 'admin'), headSales: users.filter(u => u.role === 'head_sales'), sales: users.filter(u => u.role === 'sales') }];
+        const unassigned = users.filter(u => !['superadmin'].includes(u.role) && !u.branch_id && branches.length > 0);
 
         const renderUser = (u: User) => (
           <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', opacity: u.active ? 1 : 0.5 }}>
@@ -148,7 +149,7 @@ export default function UsersPage() {
             )}
 
             {/* Branch Groups */}
-            {branchGroups.map(group => (group.admins.length > 0 || group.sales.length > 0) && (
+            {branchGroups.map(group => (group.admins.length > 0 || group.headSales.length > 0 || group.sales.length > 0) && (
               <div key={group.branch.id} style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', backgroundColor: 'rgba(155,89,182,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '16px' }}>🏢</span>
@@ -160,6 +161,12 @@ export default function UsersPage() {
                     <>
                       <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', margin: '4px 8px 2px', letterSpacing: '1px' }}>🛡️ {locale === 'ar' ? 'المديرين' : 'ADMINS'}</p>
                       {group.admins.map(renderUser)}
+                    </>
+                  )}
+                  {group.headSales.length > 0 && (
+                    <>
+                      <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', margin: '8px 8px 2px', letterSpacing: '1px' }}>📊 {locale === 'ar' ? 'هيد أوف سيلز' : 'HEAD OF SALES'}</p>
+                      {group.headSales.map(renderUser)}
                     </>
                   )}
                   {group.sales.length > 0 && (
