@@ -49,6 +49,8 @@ export default function CRMDashboard() {
   const [user, setUser] = useState<any>(null);
   const [coldLeads, setColdLeads] = useState<Lead[]>([]);
   const [targets, setTargets] = useState<Target[]>([]);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
   const { locale, dir } = useCrmLocale();
 
   useEffect(() => {
@@ -142,9 +144,12 @@ export default function CRMDashboard() {
 
       // Admin performance overview (superadmin only)
       if (u.role === 'superadmin' && allData) {
-        const { data: allUsers } = await supabaseAdmin.from('crm_users').select('id, name, role, managed_by').eq('active', true);
-        const admins = (allUsers || []).filter((usr: any) => usr.role === 'admin');
-        const sales = (allUsers || []).filter((usr: any) => usr.role === 'sales');
+        const { data: allUsersData } = await supabaseAdmin.from('crm_users').select('id, name, role, managed_by, branch_id').eq('active', true);
+        if (allUsersData) setAllUsers(allUsersData);
+        const { data: branchesData } = await supabaseAdmin.from('branches').select('*').order('created_at');
+        if (branchesData) setBranches(branchesData);
+        const admins = (allUsersData || []).filter((usr: any) => usr.role === 'admin');
+        const sales = (allUsersData || []).filter((usr: any) => usr.role === 'sales');
 
         const adminStats = admins.map((admin: any) => {
           const teamSales = sales.filter((s: any) => s.managed_by === admin.id);
@@ -270,42 +275,81 @@ export default function CRMDashboard() {
         </div>
       )}
 
-      {/* Admin Performance Overview (superadmin only) */}
+      {/* Admin Performance by Branch (superadmin only) */}
       {isSuperAdmin && adminPerf.length > 0 && (
-        <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', overflow: 'hidden', marginBottom: '24px' }}>
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>🛡️ {t('admin_performance', locale)}</h2>
-            <Link href="/crm/reports" style={{ color: '#4A90D9', fontSize: '12px', textDecoration: 'none' }}>{t('full_details', locale)} ←</Link>
-          </div>
-          <div style={{ padding: '8px 16px' }}>
-            {adminPerf.map((a, i) => (
-              <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 8px', borderBottom: i < adminPerf.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'rgba(155,89,182,0.15)', border: '2px solid rgba(155,89,182,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', flexShrink: 0 }}>🛡️</div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '14px', fontWeight: 700, color: 'white', margin: '0 0 4px' }}>{a.name}</p>
-                  <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
-                    <span>{a.teamSize} سيلز</span>
-                    <span>{a.total} ليد</span>
-                    <span style={{ color: '#00ff88' }}>{a.won} مبيعة</span>
-                    <span>{a.conversionRate}% تحويل</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+          {(branches.length > 0 ? branches : [{ id: 'none', name: locale === 'ar' ? 'كل الفروع' : 'All Branches' }]).map(branch => {
+            const branchAdmins = branches.length > 0
+              ? adminPerf.filter(a => allUsers.find(u => u.id === a.id)?.branch_id === branch.id)
+              : adminPerf;
+            if (branchAdmins.length === 0) return null;
+            const branchSales = branches.length > 0
+              ? salesPerf.filter(s => allUsers.find(u => u.id === s.id)?.branch_id === branch.id)
+              : salesPerf;
+            const branchMaxValue = Math.max(...branchAdmins.map(a => a.wonValue), 1);
+
+            return (
+              <div key={branch.id} style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', overflow: 'hidden' }}>
+                <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(155,89,182,0.05)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '18px' }}>🏢</span>
+                    <div>
+                      <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: 'white' }}>{branch.name}</h2>
+                      <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+                        {branchAdmins.length} {locale === 'ar' ? 'أدمن' : 'admins'} · {branchSales.length} {locale === 'ar' ? 'سيلز' : 'sales'}
+                      </p>
+                    </div>
                   </div>
+                  <Link href="/crm/reports" style={{ color: '#4A90D9', fontSize: '12px', textDecoration: 'none' }}>{t('full_details', locale)} ←</Link>
                 </div>
-                <div style={{ textAlign: 'left', minWidth: '100px' }}>
-                  <p style={{ fontSize: '14px', fontWeight: 800, color: '#00ff88', margin: 0 }}>{a.wonValue.toLocaleString()}</p>
-                  <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', margin: 0 }}>جنيه مبيعات</p>
+
+                {/* Admins in this branch */}
+                <div style={{ padding: '8px 16px' }}>
+                  {branchAdmins.map((a, i) => (
+                    <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 8px', borderBottom: i < branchAdmins.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'rgba(155,89,182,0.15)', border: '2px solid rgba(155,89,182,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', flexShrink: 0 }}>🛡️</div>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: '14px', fontWeight: 700, color: 'white', margin: '0 0 4px' }}>{a.name}</p>
+                        <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
+                          <span>{a.teamSize} {locale === 'ar' ? 'سيلز' : 'sales'}</span>
+                          <span>{a.total} {locale === 'ar' ? 'ليد' : 'leads'}</span>
+                          <span style={{ color: '#00ff88' }}>{a.won} {locale === 'ar' ? 'مبيعة' : 'won'}</span>
+                          <span>{a.conversionRate}%</span>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'left', minWidth: '90px' }}>
+                        <p style={{ fontSize: '14px', fontWeight: 800, color: '#00ff88', margin: 0 }}>{a.wonValue.toLocaleString()}</p>
+                        <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', margin: 0 }}>{t('egp', locale)}</p>
+                      </div>
+                      <div style={{ width: '80px' }}>
+                        <div style={{ height: '6px', borderRadius: '50px', backgroundColor: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', borderRadius: '50px', backgroundColor: '#9B59B6', width: `${(a.wonValue / branchMaxValue) * 100}%`, transition: 'width 0.5s' }} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div style={{ textAlign: 'left', minWidth: '100px' }}>
-                  <p style={{ fontSize: '14px', fontWeight: 800, color: '#4A90D9', margin: 0 }}>{Math.round(a.pipelineValue).toLocaleString()}</p>
-                  <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', margin: 0 }}>جنيه pipeline</p>
-                </div>
-                <div style={{ width: '90px' }}>
-                  <div style={{ height: '6px', borderRadius: '50px', backgroundColor: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', borderRadius: '50px', backgroundColor: '#9B59B6', width: `${(a.wonValue / maxAdminValue) * 100}%`, transition: 'width 0.5s' }} />
+
+                {/* Sales in this branch */}
+                {branchSales.length > 0 && (
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '12px 16px' }}>
+                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', margin: '0 0 8px' }}>🏆 {locale === 'ar' ? 'سيلز الفرع' : 'Branch Sales'}</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px' }}>
+                      {branchSales.slice(0, 6).map((s, i) => (
+                        <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '10px', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                          <span style={{ fontSize: '12px', color: i === 0 ? '#FFC800' : 'rgba(255,255,255,0.3)', fontWeight: 700 }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: '12px', fontWeight: 600, color: 'white', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</p>
+                            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', margin: 0 }}>{s.total} {locale === 'ar' ? 'ليد' : 'leads'} · {s.won} {locale === 'ar' ? 'مبيعة' : 'won'}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       )}
 
