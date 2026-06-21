@@ -46,7 +46,7 @@ export default function UsersPage() {
   const handleSave = async () => {
     if (!form.name || !form.email || !form.password) return;
     setSaving(true);
-    const payload = { ...form, managed_by: form.managed_by || null };
+    const payload = { ...form, managed_by: form.managed_by || null, branch_id: form.branch_id || null };
     if (editing) {
       await supabaseAdmin.from('crm_users').update(payload).eq('id', editing.id);
     } else {
@@ -118,7 +118,7 @@ export default function UsersPage() {
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: 0 }}>{u.email} {u.phone && `· ${u.phone}`}</p>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => { setEditing(u); setForm({ name: u.name, email: u.email, password: u.password, role: u.role, phone: u.phone || '', active: u.active, managed_by: u.managed_by || '' }); setShowAdd(true); }} style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: 'rgba(74,144,217,0.1)', border: '1px solid rgba(74,144,217,0.3)', color: '#4A90D9', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontSize: '12px' }}>
+              <button onClick={() => { setEditing(u); setForm({ name: u.name, email: u.email, password: u.password, role: u.role, phone: u.phone || '', active: u.active, managed_by: u.managed_by || '', branch_id: u.branch_id || '' }); setShowAdd(true); }} style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: 'rgba(74,144,217,0.1)', border: '1px solid rgba(74,144,217,0.3)', color: '#4A90D9', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontSize: '12px' }}>
                 {t('edit', locale)}
               </button>
               {u.id !== currentUser?.id && (
