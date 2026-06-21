@@ -93,15 +93,30 @@ export default function ProjectPage() {
         </nav>
       )}
 
+      <style>{`
+        @keyframes kb0 { from { transform: scale(1) translate(0,0); } to { transform: scale(1.12) translate(-1.5%,-1%); } }
+        @keyframes kb1 { from { transform: scale(1) translate(0,0); } to { transform: scale(1.1) translate(1.5%,1.5%); } }
+        @keyframes kb2 { from { transform: scale(1.05) translate(1%,0); } to { transform: scale(1.15) translate(-1%,1%); } }
+        @keyframes kb3 { from { transform: scale(1) translate(-1%,1%); } to { transform: scale(1.12) translate(1%,-1%); } }
+      `}</style>
+
       {/* Hero */}
       <div style={{ position: 'relative', height: isMobile ? '60vh' : '85vh', overflow: 'hidden' }}>
         {images.map((img, i) => (
-          <div key={img} style={{ position: 'absolute', inset: 0, backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: activeImg === i ? 1 : 0, transition: 'opacity 1.5s ease-in-out', zIndex: activeImg === i ? 1 : 0 }} />
+          <div key={`slide-${i}`} style={{
+            position: 'absolute', inset: '-8%',
+            backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center',
+            opacity: activeImg === i ? 1 : 0,
+            transition: 'opacity 2s cubic-bezier(0.4, 0, 0.2, 1)',
+            zIndex: activeImg === i ? 2 : 1,
+            animation: activeImg === i ? `kb${i % 4} 10s ease-out forwards` : 'none',
+            willChange: 'opacity, transform',
+          }} />
         ))}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(5,10,20,0.3) 0%, rgba(5,10,20,0.95) 100%)' }} />
-        <div style={{ position: 'absolute', inset: 0, background: isAr ? 'linear-gradient(to left, rgba(5,10,20,0.85) 0%, transparent 60%)' : 'linear-gradient(to right, rgba(5,10,20,0.85) 0%, transparent 60%)' }} />
+        <div style={{ position: 'absolute', inset: 0, zIndex: 3, background: 'linear-gradient(to bottom, rgba(5,10,20,0.2) 0%, rgba(5,10,20,0.5) 60%, rgba(5,10,20,0.97) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, zIndex: 3, background: isAr ? 'linear-gradient(to left, rgba(5,10,20,0.85) 0%, transparent 55%)' : 'linear-gradient(to right, rgba(5,10,20,0.85) 0%, transparent 55%)' }} />
 
-        <div style={{ position: 'absolute', bottom: isMobile ? '24px' : '60px', right: isMobile ? '24px' : '8%', direction: 'rtl', maxWidth: '600px', left: isMobile ? '24px' : 'auto' }}>
+        <div style={{ position: 'absolute', bottom: isMobile ? '24px' : '60px', right: isMobile ? '24px' : '8%', direction: 'rtl', maxWidth: '600px', left: isMobile ? '24px' : 'auto', zIndex: 4 }}>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
             <span style={{ backgroundColor: 'rgba(74,144,217,0.2)', border: '1px solid rgba(74,144,217,0.4)', borderRadius: '50px', padding: '5px 16px', color: '#4A90D9', fontSize: '11px', letterSpacing: '2px' }}>
               {isAr ? project.type_ar : project.type_en}
@@ -117,7 +132,7 @@ export default function ProjectPage() {
         </div>
 
         {images.length > 1 && (
-          <div style={{ position: 'absolute', bottom: isMobile ? '20px' : '50px', left: isMobile ? '20px' : '8%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ position: 'absolute', bottom: isMobile ? '20px' : '50px', left: isMobile ? '20px' : '8%', display: 'flex', flexDirection: 'column', gap: '12px', zIndex: 4 }}>
             {/* Progress dots */}
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
               {images.map((_, i) => (
