@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import Logo from '@/components/website/Logo';
@@ -64,14 +64,17 @@ export default function ProjectPage() {
 
   const images = project.imgs?.length ? project.imgs : [project.img];
 
+  const autoSlideRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
     if (!project) return;
     const imgs = project.imgs?.length ? project.imgs : [project.img];
     if (imgs.length <= 1) return;
-    const timer = setInterval(() => {
-      setActiveImg(curr => (curr + 1) % imgs.length);
+    if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+    autoSlideRef.current = setInterval(() => {
+      setActiveImg(prev => (prev + 1) % imgs.length);
     }, 5000);
-    return () => clearInterval(timer);
+    return () => { if (autoSlideRef.current) clearInterval(autoSlideRef.current); };
   }, [project]);
 
   return (
@@ -221,7 +224,7 @@ export default function ProjectPage() {
         )}
 
         {/* Lightbox */}
-        {lightbox !== null && project.imgs && (
+        {lightbox !== null && images.length > 0 && (
           <div onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.95)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}>
             {/* Close */}
             <button onClick={() => setLightbox(null)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', width: '44px', height: '44px', borderRadius: '50%', cursor: 'pointer', fontSize: '20px', zIndex: 201, backdropFilter: 'blur(8px)' }}>✕</button>
@@ -232,21 +235,21 @@ export default function ProjectPage() {
             </div>
 
             {/* Prev */}
-            <button onClick={e => { e.stopPropagation(); setLightbox(lightbox > 0 ? lightbox - 1 : project.imgs!.length - 1); }}
+            <button onClick={e => { e.stopPropagation(); setLightbox(lightbox > 0 ? lightbox - 1 : images.length - 1); }}
               style={{ position: 'absolute', right: isMobile ? '10px' : '30px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', width: '48px', height: '48px', borderRadius: '50%', cursor: 'pointer', fontSize: '20px', zIndex: 201, backdropFilter: 'blur(8px)' }}>→</button>
 
             {/* Next */}
-            <button onClick={e => { e.stopPropagation(); setLightbox(lightbox < project.imgs!.length - 1 ? lightbox + 1 : 0); }}
+            <button onClick={e => { e.stopPropagation(); setLightbox(lightbox < images.length - 1 ? lightbox + 1 : 0); }}
               style={{ position: 'absolute', left: isMobile ? '10px' : '30px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', width: '48px', height: '48px', borderRadius: '50%', cursor: 'pointer', fontSize: '20px', zIndex: 201, backdropFilter: 'blur(8px)' }}>←</button>
 
             {/* Image */}
-            <img onClick={e => e.stopPropagation()} src={project.imgs[lightbox]} alt=""
+            <img onClick={e => e.stopPropagation()} src={images[lightbox]} alt=""
               style={{ maxWidth: isMobile ? '95vw' : '85vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: '8px', cursor: 'default' }}
             />
 
             {/* Thumbnails */}
             <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '6px', zIndex: 201 }}>
-              {project.imgs.map((img, i) => (
+              {images.map((img, i) => (
                 <div key={i} onClick={e => { e.stopPropagation(); setLightbox(i); }}
                   style={{ width: isMobile ? '40px' : '56px', height: isMobile ? '30px' : '40px', borderRadius: '6px', overflow: 'hidden', cursor: 'pointer', border: lightbox === i ? '2px solid #4A90D9' : '2px solid rgba(255,255,255,0.2)', opacity: lightbox === i ? 1 : 0.5, transition: 'all 0.3s' }}>
                   <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
