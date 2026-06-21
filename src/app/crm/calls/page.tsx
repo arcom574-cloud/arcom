@@ -35,7 +35,15 @@ export default function CallsPage() {
       if (u.role === 'sales') query = query.eq('user_id', u.id);
 
       const { data } = await query;
-      if (data) setCalls(data);
+      const currentBranch = localStorage.getItem('crm_selected_branch');
+      if (u.role === 'superadmin' && currentBranch && currentBranch !== 'all') {
+        const { data: branchUsers } = await supabaseAdmin.from('crm_users').select('id').eq('branch_id', currentBranch);
+        const branchUserIds = (branchUsers || []).map((bu: any) => bu.id);
+        const filteredCalls = (data || []).filter((c: any) => branchUserIds.includes(c.user_id));
+        setCalls(filteredCalls);
+      } else {
+        if (data) setCalls(data);
+      }
       setLoading(false);
     };
     load();

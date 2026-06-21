@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabaseAdmin } from '@/lib/supabase';
 import { useCrmLocale } from '@/lib/crm/useCrmLocale';
+import { useBranch } from '@/lib/crm/useBranch';
 import { t } from '@/lib/crm/translations';
 
 type SalesUser = { id: string; name: string; role: string; managed_by?: string; };
@@ -22,6 +23,7 @@ const monthLabel = (monthStr: string) => {
 
 export default function TargetsPage() {
   const { locale, dir } = useCrmLocale();
+  const { refreshKey } = useBranch();
   const [users, setUsers] = useState<SalesUser[]>([]);
   const [targets, setTargets] = useState<Target[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -45,15 +47,22 @@ export default function TargetsPage() {
   }, []);
 
   const load = async () => {
-    const { data: usersData } = await supabaseAdmin.from('crm_users').select('id, name, role, managed_by').eq('active', true).in('role', ['sales', 'admin']);
-    if (usersData) setUsers(usersData);
+    const { data: usersData } = await supabaseAdmin.from('crm_users').select('id, name, role, managed_by, branch_id').eq('active', true).in('role', ['sales', 'admin']);
+    const currentBranch = localStorage.getItem('crm_selected_branch');
+    const stored = localStorage.getItem('crm_user');
+    const currentU = stored ? JSON.parse(stored) : null;
+    let filteredUsers = usersData || [];
+    if (currentU?.role === 'superadmin' && currentBranch && currentBranch !== 'all') {
+      filteredUsers = filteredUsers.filter((u: any) => u.branch_id === currentBranch);
+    }
+    if (filteredUsers) setUsers(filteredUsers);
 
     const { data: targetsData } = await supabaseAdmin.from('sales_targets').select('*').eq('month', selectedMonth);
     if (targetsData) setTargets(targetsData);
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [selectedMonth]);
+  useEffect(() => { load(); }, [selectedMonth, refreshKey]);
 
   const getTarget = (userId: string) => targets.find(t => t.user_id === userId);
 

@@ -48,7 +48,15 @@ export default function VisitsPage() {
     if (u.role === 'sales') query = query.eq('user_id', u.id);
 
     const { data } = await query;
-    if (data) setVisits(data);
+    const currentBranch = localStorage.getItem('crm_selected_branch');
+    if (u.role === 'superadmin' && currentBranch && currentBranch !== 'all') {
+      const { data: branchUsers } = await supabaseAdmin.from('crm_users').select('id').eq('branch_id', currentBranch);
+      const branchUserIds = (branchUsers || []).map((bu: any) => bu.id);
+      const filteredVisits = (data || []).filter((v: any) => branchUserIds.includes(v.user_id));
+      setVisits(filteredVisits);
+    } else {
+      if (data) setVisits(data);
+    }
 
     const { data: projectsData } = await supabaseAdmin.from('projects').select('id, name_ar').eq('active', true);
     if (projectsData) setProjects(projectsData);
