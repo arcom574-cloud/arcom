@@ -95,7 +95,9 @@ export default function ProjectPage() {
 
       {/* Hero */}
       <div style={{ position: 'relative', height: isMobile ? '60vh' : '85vh', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${images[activeImg]})`, backgroundSize: 'cover', backgroundPosition: 'center', transition: 'background-image 0s, opacity 1s ease-in-out' }} />
+        {images.map((img, i) => (
+          <div key={img} style={{ position: 'absolute', inset: 0, backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: activeImg === i ? 1 : 0, transition: 'opacity 1.5s ease-in-out', zIndex: activeImg === i ? 1 : 0 }} />
+        ))}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(5,10,20,0.3) 0%, rgba(5,10,20,0.95) 100%)' }} />
         <div style={{ position: 'absolute', inset: 0, background: isAr ? 'linear-gradient(to left, rgba(5,10,20,0.85) 0%, transparent 60%)' : 'linear-gradient(to right, rgba(5,10,20,0.85) 0%, transparent 60%)' }} />
 
