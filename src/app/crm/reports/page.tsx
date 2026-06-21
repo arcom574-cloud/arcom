@@ -49,7 +49,14 @@ export default function ReportsPage() {
       }
       const { data } = await leadsQuery;
       if (data) setLeads(data);
-      const { data: usersData } = await supabaseAdmin.from('crm_users').select('id, name, role, managed_by').eq('active', true);
+      let usersQuery = supabaseAdmin.from('crm_users').select('id, name, role, managed_by, branch_id').eq('active', true);
+      if (currentUser?.role === 'superadmin') {
+        const currentBranch = localStorage.getItem('crm_selected_branch');
+        if (currentBranch && currentBranch !== 'all') {
+          usersQuery = usersQuery.eq('branch_id', currentBranch);
+        }
+      }
+      const { data: usersData } = await usersQuery;
       if (usersData) setUsers(usersData);
 
       const currentMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`;
