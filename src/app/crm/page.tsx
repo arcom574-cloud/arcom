@@ -66,9 +66,14 @@ export default function CRMDashboard() {
       const u = stored ? JSON.parse(stored) : null;
       if (!u) return;
 
+      const currentBranch = localStorage.getItem('crm_selected_branch');
+      const hasBranchFilter = u.role === 'superadmin' && currentBranch && currentBranch !== 'all';
+
       let allData: any[] | null = null;
       if (u.role !== 'sales') {
-        const { data } = await supabaseAdmin.from('leads').select('*, crm_users(name)');
+        let allQuery = supabaseAdmin.from('leads').select('*, crm_users(name)');
+        if (hasBranchFilter) allQuery = allQuery.eq('branch_id', currentBranch);
+        const { data } = await allQuery;
         allData = data;
         if (data) setAllLeads(data);
       }
@@ -81,6 +86,8 @@ export default function CRMDashboard() {
         const { data: teamMembers } = await supabaseAdmin.from('crm_users').select('id').eq('managed_by', u.id);
         const teamIds = [u.id, ...(teamMembers || []).map((t: any) => t.id)];
         query = query.in('assigned_to', teamIds);
+      } else if (hasBranchFilter) {
+        query = query.eq('branch_id', currentBranch);
       }
 
       const { data } = await query;
@@ -120,8 +127,9 @@ export default function CRMDashboard() {
 
       // Sales performance (superadmin and admin only)
       if (u.role !== 'sales') {
-        let usersQuery = supabaseAdmin.from('crm_users').select('id, name, role, managed_by').eq('active', true).in('role', ['sales', 'admin']);
+        let usersQuery = supabaseAdmin.from('crm_users').select('id, name, role, managed_by, branch_id').eq('active', true).in('role', ['sales', 'admin']);
         if (u.role === 'admin') usersQuery = usersQuery.eq('managed_by', u.id);
+        if (hasBranchFilter) usersQuery = usersQuery.eq('branch_id', currentBranch);
 
         const { data: salesUsers } = await usersQuery;
 
@@ -146,7 +154,9 @@ export default function CRMDashboard() {
 
       // Admin performance overview (superadmin only)
       if (u.role === 'superadmin' && allData) {
-        const { data: allUsersData } = await supabaseAdmin.from('crm_users').select('id, name, role, managed_by, branch_id').eq('active', true);
+        let allUsersQuery = supabaseAdmin.from('crm_users').select('id, name, role, managed_by, branch_id').eq('active', true);
+        if (hasBranchFilter) allUsersQuery = allUsersQuery.eq('branch_id', currentBranch);
+        const { data: allUsersData } = await allUsersQuery;
         if (allUsersData) setAllUsers(allUsersData);
         const { data: branchesData } = await supabaseAdmin.from('branches').select('*').order('created_at');
         if (branchesData) setBranches(branchesData);
