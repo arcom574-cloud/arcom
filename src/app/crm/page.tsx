@@ -84,6 +84,8 @@ export default function CRMDashboard() {
         const { data: teamMembers } = await supabaseAdmin.from('crm_users').select('id').eq('managed_by', u.id);
         const teamIds = [u.id, ...(teamMembers || []).map((t: any) => t.id)];
         query = query.in('assigned_to', teamIds);
+      } else if (u.role === 'head_sales') {
+        if (u.branch_id) query = query.eq('branch_id', u.branch_id);
       } else if (hasBranchFilter) {
         query = query.eq('branch_id', currentBranch);
       }
@@ -123,7 +125,7 @@ export default function CRMDashboard() {
         }
       }
 
-      // Sales performance (superadmin and admin only)
+      // Sales performance (superadmin, admin, head_sales)
       if (u.role !== 'sales') {
         let usersQuery = supabaseAdmin.from('crm_users').select('id, name, role, managed_by, branch_id').eq('active', true).in('role', ['sales', 'admin']);
         if (u.role === 'admin') usersQuery = usersQuery.eq('managed_by', u.id);

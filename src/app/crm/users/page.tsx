@@ -71,8 +71,8 @@ export default function UsersPage() {
     outline: 'none', boxSizing: 'border-box' as const,
   };
 
-  const roleLabel: Record<string, string> = locale === 'ar' ? { superadmin: 'سوبر أدمن', admin: 'أدمن', sales: 'سيلز' } : { superadmin: 'Super Admin', admin: 'Admin', sales: 'Sales' };
-  const roleColor: Record<string, string> = { superadmin: '#ff4444', admin: '#C9A84C', sales: '#4A90D9' };
+  const roleLabel: Record<string, string> = locale === 'ar' ? { superadmin: 'سوبر أدمن', admin: 'أدمن', head_sales: 'هيد أوف سيلز', sales: 'سيلز' } : { superadmin: 'Super Admin', admin: 'Admin', head_sales: 'Head of Sales', sales: 'Sales' };
+  const roleColor: Record<string, string> = { superadmin: '#ff4444', admin: '#C9A84C', head_sales: '#E67E22', sales: '#4A90D9' };
 
   const admins = users.filter(u => u.role === 'admin');
   const getManagerName = (managedBy?: string) => users.find(u => u.id === managedBy)?.name;
@@ -105,7 +105,7 @@ export default function UsersPage() {
         const renderUser = (u: User) => (
           <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', opacity: u.active ? 1 : 0.5 }}>
             <div style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: `${roleColor[u.role]}20`, border: `2px solid ${roleColor[u.role]}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>
-              {u.role === 'superadmin' ? '👑' : u.role === 'admin' ? '🛡️' : '👤'}
+              {u.role === 'superadmin' ? '👑' : u.role === 'admin' ? '🛡️' : u.role === 'head_sales' ? '📊' : '👤'}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -217,6 +217,7 @@ export default function UsersPage() {
                 <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>{locale === 'ar' ? 'الدور' : 'Role'}</label>
                 <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value, managed_by: e.target.value !== 'sales' ? '' : form.managed_by })} style={{ ...inputStyle, cursor: 'pointer' }}>
                   <option value="sales" style={{ backgroundColor: '#0A0F1A' }}>{locale === 'ar' ? 'سيلز' : 'Sales'}</option>
+                  <option value="head_sales" style={{ backgroundColor: '#0A0F1A' }}>{locale === 'ar' ? 'هيد أوف سيلز' : 'Head of Sales'}</option>
                   <option value="admin" style={{ backgroundColor: '#0A0F1A' }}>{locale === 'ar' ? 'أدمن' : 'Admin'}</option>
                   <option value="superadmin" style={{ backgroundColor: '#0A0F1A' }}>{locale === 'ar' ? 'سوبر أدمن' : 'Super Admin'}</option>
                 </select>

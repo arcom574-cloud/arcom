@@ -98,6 +98,8 @@ export default function LeadsPage() {
       const { data: teamMembers } = await supabaseAdmin.from('crm_users').select('id').eq('managed_by', u.id);
       const teamIds = [u.id, ...(teamMembers || []).map((t: any) => t.id)];
       query = query.in('assigned_to', teamIds);
+    } else if (u.role === 'head_sales') {
+      if (u.branch_id) query = query.eq('branch_id', u.branch_id);
     } else if (u.role === 'superadmin') {
       const currentBranch = localStorage.getItem('crm_selected_branch');
       if (currentBranch && currentBranch !== 'all') {
@@ -319,6 +321,8 @@ export default function LeadsPage() {
   };
 
   const isFromChatbot = (lead: Lead) => lead.source === 'chatbot' || lead.notes?.includes('شات بوت');
+  const canEdit = user?.role !== 'sales' && user?.role !== 'head_sales';
+  const isHeadSales = user?.role === 'head_sales';
 
   const filtered = leads.filter(l => {
     const matchSearch = l.name.includes(search) || l.phone.includes(search);
@@ -390,7 +394,7 @@ export default function LeadsPage() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          {(user?.role === 'superadmin' || user?.role === 'admin') && (
+          {canEdit && (user?.role === 'superadmin' || user?.role === 'admin') && (
             <button onClick={() => setShowBulkTransfer(true)} style={{ backgroundColor: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', color: '#C9A84C', padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Cairo, sans-serif', display: 'flex', alignItems: 'center', gap: '8px' }}>
               {t('bulk_assign', locale)}
               {leads.filter(l => !l.assigned_to).length > 0 && (
@@ -405,7 +409,7 @@ export default function LeadsPage() {
               تحويل المحدد ({selectedLeads.size})
             </button>
           )}
-          {user?.role !== 'sales' && (
+          {canEdit && (
             <>
               <button onClick={handleExportExcel} style={{ backgroundColor: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.3)', color: '#25D366', padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>
                 {t('export_excel', locale)}
@@ -553,7 +557,7 @@ export default function LeadsPage() {
                     <a href={`/crm/leads/${lead.id}`} style={{ padding: '5px 8px', borderRadius: '6px', backgroundColor: 'rgba(74,144,217,0.1)', border: '1px solid rgba(74,144,217,0.2)', color: '#4A90D9', textDecoration: 'none', fontSize: '10px' }}>{t('details', locale)}</a>
                     <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" style={{ padding: '5px 8px', borderRadius: '6px', backgroundColor: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.2)', color: '#25D366', textDecoration: 'none', fontSize: '10px' }}>{t('whatsapp', locale)}</a>
                     <a href={`tel:${lead.phone}`} style={{ padding: '5px 8px', borderRadius: '6px', backgroundColor: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', color: '#C9A84C', textDecoration: 'none', fontSize: '10px' }}>{t('call', locale)}</a>
-                    {user?.role !== 'sales' && (
+                    {canEdit && (
                       <button onClick={() => setShowTransfer(lead.id)} style={{ padding: '5px 8px', borderRadius: '6px', backgroundColor: 'rgba(155,89,182,0.1)', border: '1px solid rgba(155,89,182,0.2)', color: '#9B59B6', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontSize: '10px' }}>{t('transfer', locale)}</button>
                     )}
                   </div>
@@ -623,7 +627,7 @@ export default function LeadsPage() {
                   {Object.entries(sourceLabels).map(([k, v]) => <option key={k} value={k} style={{ backgroundColor: '#0A0F1A' }}>{v}</option>)}
                 </select>
               </div>
-              {user?.role !== 'sales' && (
+              {canEdit && (
                 <div>
                   <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>تعيين لـ</label>
                   <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} style={{ ...inputStyle, cursor: 'pointer' }}>

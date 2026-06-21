@@ -19,6 +19,7 @@ const translations = {
   logout: { ar: 'تسجيل خروج', en: 'Logout' },
   superadmin: { ar: 'سوبر أدمن', en: 'Super Admin' },
   admin: { ar: 'أدمن', en: 'Admin' },
+  head_sales: { ar: 'هيد أوف سيلز', en: 'Head of Sales' },
   sales: { ar: 'سيلز', en: 'Sales' },
   loading: { ar: 'جاري التحميل...', en: 'Loading...' },
   login: { ar: 'تسجيل الدخول', en: 'Login' },
