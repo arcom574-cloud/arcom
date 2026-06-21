@@ -44,6 +44,25 @@ const unitTypeLabel: Record<string, string> = {
   shop: 'محل', office: 'مكتب إداري', cafe: 'كافيه/مطعم',
 };
 
+const arabCountries = [
+  { code: '+20', name: '🇪🇬 مصر', digits: 10 },
+  { code: '+966', name: '🇸🇦 السعودية', digits: 9 },
+  { code: '+971', name: '🇦🇪 الإمارات', digits: 9 },
+  { code: '+965', name: '🇰🇼 الكويت', digits: 8 },
+  { code: '+974', name: '🇶🇦 قطر', digits: 8 },
+  { code: '+973', name: '🇧🇭 البحرين', digits: 8 },
+  { code: '+968', name: '🇴🇲 عمان', digits: 8 },
+  { code: '+962', name: '🇯🇴 الأردن', digits: 9 },
+  { code: '+961', name: '🇱🇧 لبنان', digits: 8 },
+  { code: '+964', name: '🇮🇶 العراق', digits: 10 },
+  { code: '+218', name: '🇱🇾 ليبيا', digits: 9 },
+  { code: '+216', name: '🇹🇳 تونس', digits: 8 },
+  { code: '+213', name: '🇩🇿 الجزائر', digits: 9 },
+  { code: '+212', name: '🇲🇦 المغرب', digits: 9 },
+  { code: '+249', name: '🇸🇩 السودان', digits: 9 },
+  { code: '+967', name: '🇾🇪 اليمن', digits: 9 },
+];
+
 const emptyLead = {
   name: '', phone: '', email: '', project_interest: '', project_id: '',
   source: 'manual', status: 'new', assigned_to: '',
@@ -78,6 +97,7 @@ export default function LeadsPage() {
   const [bulkCount, setBulkCount] = useState('');
   const [bulkSourceFilter, setBulkSourceFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [phoneCountry, setPhoneCountry] = useState('+20');
   const pageSize = 25;
 
   useEffect(() => {
@@ -139,13 +159,24 @@ export default function LeadsPage() {
 
   useEffect(() => { load(); }, [refreshKey]);
 
+  const getPhoneDigits = () => {
+    const country = arabCountries.find(c => c.code === phoneCountry);
+    return country?.digits || 10;
+  };
+
+  const isPhoneValid = () => {
+    const digits = form.phone.replace(/\D/g, '');
+    return digits.length === getPhoneDigits();
+  };
+
   const handleAdd = async () => {
-    if (!form.name || !form.phone) return;
+    if (!form.name || !form.phone || !isPhoneValid()) return;
     setSaving(true);
     const stored = localStorage.getItem('crm_user');
     const u = stored ? JSON.parse(stored) : null;
     const assignedTo = form.assigned_to || (u?.role === 'admin' || u?.role === 'sales' ? u.id : null);
-    await supabaseAdmin.from('leads').insert({ ...form, assigned_to: assignedTo, branch_id: u?.branch_id || null });
+    const fullPhone = phoneCountry + form.phone.replace(/\D/g, '');
+    await supabaseAdmin.from('leads').insert({ ...form, phone: fullPhone, assigned_to: assignedTo, branch_id: u?.branch_id || null });
     setSaving(false);
     setShowAdd(false);
     setForm(emptyLead);
@@ -593,8 +624,31 @@ export default function LeadsPage() {
                 <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} style={inputStyle} />
               </div>
               <div>
-                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>التليفون *</label>
-                <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} style={{ ...inputStyle, direction: 'ltr' }} />
+                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>{locale === 'ar' ? 'التليفون *' : 'Phone *'}</label>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <select value={phoneCountry} onChange={e => setPhoneCountry(e.target.value)} style={{ ...inputStyle, width: '130px', cursor: 'pointer', fontSize: '12px' }}>
+                    {arabCountries.map(c => (
+                      <option key={c.code} value={c.code} style={{ backgroundColor: '#0A0F1A' }}>{c.name} ({c.code})</option>
+                    ))}
+                  </select>
+                  <div style={{ flex: 1, position: 'relative' }}>
+                    <input
+                      value={form.phone}
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, getPhoneDigits());
+                        setForm({ ...form, phone: val });
+                      }}
+                      placeholder={`${'0'.repeat(getPhoneDigits())}`}
+                      maxLength={getPhoneDigits()}
+                      style={{ ...inputStyle, direction: 'ltr', borderColor: form.phone && !isPhoneValid() ? 'rgba(255,68,68,0.5)' : 'rgba(255,255,255,0.1)' }}
+                    />
+                    {form.phone && (
+                      <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '10px', color: isPhoneValid() ? '#25D366' : '#ff4444' }}>
+                        {form.phone.replace(/\D/g, '').length}/{getPhoneDigits()}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
               <div>
                 <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>الإيميل</label>
@@ -644,7 +698,7 @@ export default function LeadsPage() {
             </div>
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
               <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: '12px', borderRadius: '10px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>إلغاء</button>
-              <button onClick={handleAdd} disabled={saving || !form.name || !form.phone} style={{ flex: 2, padding: '12px', borderRadius: '10px', backgroundColor: '#1B4B8A', border: 'none', color: 'white', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontWeight: 700 }}>
+              <button onClick={handleAdd} disabled={saving || !form.name || !form.phone || !isPhoneValid()} style={{ flex: 2, padding: '12px', borderRadius: '10px', backgroundColor: '#1B4B8A', border: 'none', color: 'white', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontWeight: 700 }}>
                 {saving ? 'جاري الحفظ...' : '💾 حفظ'}
               </button>
             </div>
