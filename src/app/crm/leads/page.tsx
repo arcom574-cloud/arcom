@@ -656,10 +656,10 @@ export default function LeadsPage() {
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>تحويل إلى</label>
+                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>{locale === 'ar' ? 'تحويل إلى' : 'Transfer to'}</label>
                 <select value={transferTo} onChange={e => setTransferTo(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                  <option value="" style={{ backgroundColor: '#0A0F1A' }}>اختر مستخدم</option>
-                  {users.map(u => <option key={u.id} value={u.id} style={{ backgroundColor: '#0A0F1A' }}>{u.name} ({u.role})</option>)}
+                  <option value="" style={{ backgroundColor: '#0A0F1A' }}>{locale === 'ar' ? 'اختر أدمن' : 'Select Admin'}</option>
+                  {users.filter(u => u.role === 'admin').map(u => <option key={u.id} value={u.id} style={{ backgroundColor: '#0A0F1A' }}>🛡️ {u.name}</option>)}
                 </select>
               </div>
               {showTransfer !== 'bulk' && (
@@ -690,15 +690,27 @@ export default function LeadsPage() {
               {locale === 'ar' ? `${leads.filter(l => !l.assigned_to).length} ليد غير مخصص · ${getTeamMembers().length} عضو في الفريق` : `${leads.filter(l => !l.assigned_to).length} unassigned leads · ${getTeamMembers().length} team members`}
             </p>
 
-            {/* Team Members */}
-            <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', marginBottom: '10px' }}>{locale === 'ar' ? 'فريقك' : 'Your Team'}</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {getTeamMembers().map(u => (
-                  <span key={u.id} style={{ padding: '4px 12px', borderRadius: '50px', backgroundColor: 'rgba(74,144,217,0.1)', border: '1px solid rgba(74,144,217,0.2)', color: '#4A90D9', fontSize: '12px' }}>{u.name}</span>
-                ))}
-                {getTeamMembers().length === 0 && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>{locale === 'ar' ? 'لا يوجد أعضاء' : 'No members'}</span>}
-              </div>
+            {/* Team by Admin */}
+            <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {users.filter(u => u.role === 'admin').map(admin => {
+                const adminSales = users.filter(u => u.role === 'sales' && u.managed_by === admin.id);
+                if (user?.role === 'admin' && admin.id !== user.id) return null;
+                return (
+                  <div key={admin.id} style={{ padding: '12px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '14px' }}>🛡️</span>
+                      <span style={{ color: '#9B59B6', fontSize: '13px', fontWeight: 700 }}>{admin.name}</span>
+                      <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px' }}>({adminSales.length} {locale === 'ar' ? 'سيلز' : 'sales'})</span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {adminSales.map(s => (
+                        <span key={s.id} style={{ padding: '3px 10px', borderRadius: '50px', backgroundColor: 'rgba(74,144,217,0.1)', border: '1px solid rgba(74,144,217,0.15)', color: '#4A90D9', fontSize: '11px' }}>👤 {s.name}</span>
+                      ))}
+                      {adminSales.length === 0 && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px' }}>{locale === 'ar' ? 'لا يوجد سيلز' : 'No sales'}</span>}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Auto Distribute */}
@@ -721,13 +733,12 @@ export default function LeadsPage() {
                 </select>
               </div>
               <div>
-                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>{locale === 'ar' ? 'تحويل لـ' : 'Assign to'}</label>
+                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>{locale === 'ar' ? 'تحويل لأدمن' : 'Assign to Admin'}</label>
                 <select value={bulkTransferTo} onChange={e => setBulkTransferTo(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                  <option value="" style={{ backgroundColor: '#0A0F1A' }}>{locale === 'ar' ? 'اختر عضو' : 'Select member'}</option>
-                  {user?.role === 'superadmin'
-                    ? users.map(u => <option key={u.id} value={u.id} style={{ backgroundColor: '#0A0F1A' }}>{u.name} ({u.role === 'admin' ? (locale === 'ar' ? 'أدمن' : 'Admin') : (locale === 'ar' ? 'سيلز' : 'Sales')})</option>)
-                    : getTeamMembers().map(u => <option key={u.id} value={u.id} style={{ backgroundColor: '#0A0F1A' }}>{u.name}</option>)
-                  }
+                  <option value="" style={{ backgroundColor: '#0A0F1A' }}>{locale === 'ar' ? 'اختر أدمن' : 'Select Admin'}</option>
+                  {users.filter(u => u.role === 'admin').map(u => (
+                    <option key={u.id} value={u.id} style={{ backgroundColor: '#0A0F1A' }}>🛡️ {u.name}</option>
+                  ))}
                 </select>
               </div>
             </div>
