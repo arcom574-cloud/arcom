@@ -144,7 +144,8 @@ export default function LeadsPage() {
     setSaving(true);
     const stored = localStorage.getItem('crm_user');
     const u = stored ? JSON.parse(stored) : null;
-    await supabaseAdmin.from('leads').insert({ ...form, assigned_to: form.assigned_to || null, branch_id: u?.branch_id || null });
+    const assignedTo = form.assigned_to || (u?.role === 'admin' || u?.role === 'sales' ? u.id : null);
+    await supabaseAdmin.from('leads').insert({ ...form, assigned_to: assignedTo, branch_id: u?.branch_id || null });
     setSaving(false);
     setShowAdd(false);
     setForm(emptyLead);
