@@ -24,6 +24,8 @@ export default function ProjectPage() {
   const isAr = locale === 'ar';
   const [isMobile, setIsMobile] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
+  const [prevImg, setPrevImg] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,6 +66,22 @@ export default function ProjectPage() {
 
   const images = project.imgs?.length ? project.imgs : [project.img];
 
+  const goToSlide = (idx: number) => {
+    if (idx === activeImg || isTransitioning) return;
+    setIsTransitioning(true);
+    setPrevImg(activeImg);
+    setActiveImg(idx);
+    setTimeout(() => setIsTransitioning(false), 1200);
+  };
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+    const interval = setInterval(() => {
+      goToSlide((activeImg + 1) % images.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [activeImg, images.length, isTransitioning]);
+
   return (
     <main style={{ minHeight: '100vh', backgroundColor: '#050A14', color: 'white', fontFamily: 'Cairo, sans-serif' }}>
 
@@ -81,11 +99,27 @@ export default function ProjectPage() {
         </nav>
       )}
 
+      <style>{`
+        @keyframes kenBurns {
+          0% { transform: scale(1); }
+          100% { transform: scale(1.15); }
+        }
+        @keyframes fadeSlideIn {
+          0% { opacity: 0; transform: scale(1.05); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+
       {/* Hero */}
       <div style={{ position: 'relative', height: isMobile ? '60vh' : '85vh', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${images[activeImg]})`, backgroundSize: 'cover', backgroundPosition: 'center', transition: 'all 0.8s ease' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(5,10,20,0.4) 0%, rgba(5,10,20,0.95) 100%)' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(5,10,20,0.8) 0%, transparent 60%)' }} />
+        {/* Previous image (fading out) */}
+        {isTransitioning && (
+          <div style={{ position: 'absolute', inset: '-5%', backgroundImage: `url(${images[prevImg]})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.4, transition: 'opacity 1.2s ease' }} />
+        )}
+        {/* Active image with Ken Burns */}
+        <div style={{ position: 'absolute', inset: '-5%', backgroundImage: `url(${images[activeImg]})`, backgroundSize: 'cover', backgroundPosition: 'center', animation: `kenBurns 8s ease-out forwards${isTransitioning ? ', fadeSlideIn 1.2s ease-out' : ''}` }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(5,10,20,0.3) 0%, rgba(5,10,20,0.95) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: isAr ? 'linear-gradient(to left, rgba(5,10,20,0.85) 0%, transparent 60%)' : 'linear-gradient(to right, rgba(5,10,20,0.85) 0%, transparent 60%)' }} />
 
         <div style={{ position: 'absolute', bottom: isMobile ? '24px' : '60px', right: isMobile ? '24px' : '8%', direction: 'rtl', maxWidth: '600px', left: isMobile ? '24px' : 'auto' }}>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
@@ -103,12 +137,22 @@ export default function ProjectPage() {
         </div>
 
         {images.length > 1 && (
-          <div style={{ position: 'absolute', bottom: isMobile ? '24px' : '60px', left: isMobile ? '24px' : '8%', display: 'flex', gap: '8px' }}>
-            {images.map((img, i) => (
-              <div key={i} onClick={() => setActiveImg(i)} style={{ width: isMobile ? '48px' : '64px', height: isMobile ? '36px' : '48px', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', border: activeImg === i ? '2px solid #4A90D9' : '2px solid rgba(255,255,255,0.2)', transition: 'all 0.3s' }}>
-                <div style={{ width: '100%', height: '100%', backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: activeImg === i ? 'none' : 'brightness(0.5)' }} />
-              </div>
-            ))}
+          <div style={{ position: 'absolute', bottom: isMobile ? '20px' : '50px', left: isMobile ? '20px' : '8%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Progress dots */}
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              {images.map((_, i) => (
+                <div key={i} onClick={() => goToSlide(i)} style={{ width: activeImg === i ? '32px' : '8px', height: '8px', borderRadius: '50px', backgroundColor: activeImg === i ? '#4A90D9' : 'rgba(255,255,255,0.3)', cursor: 'pointer', transition: 'all 0.5s ease', boxShadow: activeImg === i ? '0 0 12px rgba(74,144,217,0.5)' : 'none' }} />
+              ))}
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginLeft: '8px' }}>{activeImg + 1}/{images.length}</span>
+            </div>
+            {/* Thumbnails */}
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {images.map((img, i) => (
+                <div key={i} onClick={() => goToSlide(i)} style={{ width: isMobile ? '44px' : '60px', height: isMobile ? '33px' : '44px', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', border: activeImg === i ? '2px solid #4A90D9' : '2px solid rgba(255,255,255,0.15)', transition: 'all 0.4s', transform: activeImg === i ? 'scale(1.1)' : 'scale(1)', boxShadow: activeImg === i ? '0 4px 16px rgba(0,0,0,0.4)' : 'none' }}>
+                  <div style={{ width: '100%', height: '100%', backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: activeImg === i ? 'none' : 'brightness(0.4)' }} />
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
