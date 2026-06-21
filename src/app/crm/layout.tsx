@@ -148,20 +148,8 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
 
       {/* Sidebar */}
       <div style={{ width: '240px', backgroundColor: isMobile ? '#0A0F1A' : 'rgba(255,255,255,0.02)', borderLeft: isAr ? '1px solid rgba(255,255,255,0.06)' : 'none', borderRight: isAr ? 'none' : '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, [isAr ? 'right' : 'left']: 0, bottom: 0, zIndex: 40, ...(isMobile ? { transform: sidebarOpen ? 'translateX(0)' : (isAr ? 'translateX(100%)' : 'translateX(-100%)'), transition: 'transform 0.3s ease' } : {}) }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
           <img src="/logo.png" alt="Arcom" style={{ height: '50px', objectFit: 'contain' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {user?.role === 'superadmin' && branches.length > 0 && (
-              <select value={selectedBranch} onChange={e => setSelectedBranch(e.target.value)} style={{ background: 'rgba(155,89,182,0.1)', border: '1px solid rgba(155,89,182,0.25)', borderRadius: '8px', color: '#9B59B6', padding: '4px 8px', fontSize: '10px', fontWeight: 700, fontFamily: 'Cairo, sans-serif', outline: 'none', cursor: 'pointer' }}>
-                <option value="all" style={{ backgroundColor: '#0A0F1A' }}>{isAr ? 'كل الفروع' : 'All Branches'}</option>
-                {branches.map(b => <option key={b.id} value={b.id} style={{ backgroundColor: '#0A0F1A' }}>{b.name}</option>)}
-              </select>
-            )}
-            <button onClick={toggleLocale} style={{ background: 'rgba(74,144,217,0.1)', border: '1px solid rgba(74,144,217,0.25)', borderRadius: '8px', color: '#4A90D9', cursor: 'pointer', padding: '4px 10px', fontSize: '11px', fontWeight: 700, fontFamily: 'Cairo, sans-serif' }}>
-              {isAr ? 'EN' : 'عربي'}
-            </button>
-            <Notifications />
-          </div>
         </div>
 
         <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '4px', overflowY: 'auto' }}>
@@ -173,14 +161,32 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
-        <div style={{ padding: '16px 12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ padding: '10px 16px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.03)', marginBottom: '8px' }}>
-            <p style={{ color: 'white', fontSize: '13px', fontWeight: 700, margin: '0 0 2px' }}>{user.name}</p>
-            <p style={{ color: '#4A90D9', fontSize: '11px', margin: 0 }}>
-              {t(user.role as any, locale)}
-            </p>
+        <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {/* Branch Selector */}
+          {user?.role === 'superadmin' && branches.length > 0 && (
+            <select value={selectedBranch} onChange={e => setSelectedBranch(e.target.value)} style={{ width: '100%', background: 'rgba(155,89,182,0.1)', border: '1px solid rgba(155,89,182,0.25)', borderRadius: '10px', color: '#9B59B6', padding: '8px 12px', fontSize: '12px', fontWeight: 700, fontFamily: 'Cairo, sans-serif', outline: 'none', cursor: 'pointer' }}>
+              <option value="all" style={{ backgroundColor: '#0A0F1A' }}>{isAr ? '🏢 كل الفروع' : '🏢 All Branches'}</option>
+              {branches.map(b => <option key={b.id} value={b.id} style={{ backgroundColor: '#0A0F1A' }}>🏢 {b.name}</option>)}
+            </select>
+          )}
+
+          {/* Controls Row */}
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button onClick={toggleLocale} style={{ flex: 1, background: 'rgba(74,144,217,0.1)', border: '1px solid rgba(74,144,217,0.2)', borderRadius: '10px', color: '#4A90D9', cursor: 'pointer', padding: '8px', fontSize: '12px', fontWeight: 700, fontFamily: 'Cairo, sans-serif' }}>
+              {isAr ? 'EN' : 'عربي'}
+            </button>
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px' }}>
+              <Notifications />
+            </div>
           </div>
-          <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', backgroundColor: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.2)', color: '#ff4444', fontSize: '13px', cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>
+
+          {/* User Info */}
+          <div style={{ padding: '10px 12px', borderRadius: '10px', backgroundColor: 'rgba(255,255,255,0.03)' }}>
+            <p style={{ color: 'white', fontSize: '13px', fontWeight: 700, margin: '0 0 2px' }}>{user.name}</p>
+            <p style={{ color: '#4A90D9', fontSize: '11px', margin: 0 }}>{t(user.role as any, locale)}</p>
+          </div>
+
+          <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', borderRadius: '10px', backgroundColor: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.2)', color: '#ff4444', fontSize: '12px', cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>
             🚪 {t('logout', locale)}
           </button>
         </div>

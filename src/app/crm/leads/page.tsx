@@ -98,8 +98,11 @@ export default function LeadsPage() {
       const { data: teamMembers } = await supabaseAdmin.from('crm_users').select('id').eq('managed_by', u.id);
       const teamIds = [u.id, ...(teamMembers || []).map((t: any) => t.id)];
       query = query.in('assigned_to', teamIds);
-    } else if (u.role === 'superadmin' && branchFilter) {
-      query = query.eq('branch_id', branchFilter);
+    } else if (u.role === 'superadmin') {
+      const currentBranch = localStorage.getItem('crm_selected_branch');
+      if (currentBranch && currentBranch !== 'all') {
+        query = query.eq('branch_id', currentBranch);
+      }
     }
 
     const { data } = await query;

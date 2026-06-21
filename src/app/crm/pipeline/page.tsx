@@ -40,10 +40,11 @@ export default function PipelinePage() {
       let query = supabaseAdmin.from('leads').select('*, crm_users(name)').order('created_at', { ascending: false });
       if (u.role === 'sales') query = query.eq('assigned_to', u.id);
 
-      const stored2 = localStorage.getItem('crm_user');
-      const u2 = stored2 ? JSON.parse(stored2) : null;
-      if (u2?.role === 'superadmin' && branchFilter) {
-        query = query.eq('branch_id', branchFilter);
+      if (u?.role === 'superadmin') {
+        const currentBranch = localStorage.getItem('crm_selected_branch');
+        if (currentBranch && currentBranch !== 'all') {
+          query = query.eq('branch_id', currentBranch);
+        }
       }
 
       const { data } = await query;

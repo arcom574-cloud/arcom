@@ -41,8 +41,11 @@ export default function ReportsPage() {
   useEffect(() => {
     const load = async () => {
       let leadsQuery = supabaseAdmin.from('leads').select('*, crm_users(name)').order('created_at', { ascending: false });
-      if (currentUser?.role === 'superadmin' && branchFilter) {
-        leadsQuery = leadsQuery.eq('branch_id', branchFilter);
+      if (currentUser?.role === 'superadmin') {
+        const currentBranch = localStorage.getItem('crm_selected_branch');
+        if (currentBranch && currentBranch !== 'all') {
+          leadsQuery = leadsQuery.eq('branch_id', currentBranch);
+        }
       }
       const { data } = await leadsQuery;
       if (data) setLeads(data);
