@@ -91,45 +91,103 @@ export default function UsersPage() {
         </button>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {users.map(u => (
-          <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px 24px', borderRadius: '16px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', opacity: u.active ? 1 : 0.5 }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: `${roleColor[u.role]}20`, border: `2px solid ${roleColor[u.role]}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
+      {(() => {
+        const superadmins = users.filter(u => u.role === 'superadmin');
+        const branchGroups = branches.length > 0
+          ? branches.map(b => ({
+              branch: b,
+              admins: users.filter(u => u.role === 'admin' && u.branch_id === b.id),
+              sales: users.filter(u => u.role === 'sales' && u.branch_id === b.id),
+            }))
+          : [{ branch: { id: 'none', name: locale === 'ar' ? 'بدون فرع' : 'No Branch' }, admins: users.filter(u => u.role === 'admin'), sales: users.filter(u => u.role === 'sales') }];
+        const unassigned = users.filter(u => u.role !== 'superadmin' && !u.branch_id && branches.length > 0);
+
+        const renderUser = (u: User) => (
+          <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', opacity: u.active ? 1 : 0.5 }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: `${roleColor[u.role]}20`, border: `2px solid ${roleColor[u.role]}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>
               {u.role === 'superadmin' ? '👑' : u.role === 'admin' ? '🛡️' : '👤'}
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'white', margin: 0 }}>{u.name}</h3>
-                <span style={{ backgroundColor: `${roleColor[u.role]}20`, border: `1px solid ${roleColor[u.role]}40`, borderRadius: '50px', padding: '2px 10px', fontSize: '11px', color: roleColor[u.role] }}>
-                  {roleLabel[u.role]}
-                </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'white', margin: 0 }}>{u.name}</h3>
+                <span style={{ backgroundColor: `${roleColor[u.role]}15`, border: `1px solid ${roleColor[u.role]}30`, borderRadius: '50px', padding: '1px 8px', fontSize: '10px', color: roleColor[u.role] }}>{roleLabel[u.role]}</span>
                 {u.role === 'sales' && u.managed_by && (
-                  <span style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50px', padding: '2px 10px', fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
-                    {locale === 'ar' ? `تابع لـ ${getManagerName(u.managed_by) || 'غير معروف'}` : `Managed by ${getManagerName(u.managed_by) || 'Unknown'}`}
-                  </span>
+                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>← {getManagerName(u.managed_by)}</span>
                 )}
-                {!u.active && <span style={{ backgroundColor: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.3)', borderRadius: '50px', padding: '2px 10px', fontSize: '11px', color: '#ff4444' }}>{locale === 'ar' ? 'معطل' : 'Disabled'}</span>}
-                {u.branch_id && branches.length > 0 && (
-                  <span style={{ backgroundColor: 'rgba(155,89,182,0.1)', border: '1px solid rgba(155,89,182,0.3)', borderRadius: '50px', padding: '2px 10px', fontSize: '11px', color: '#9B59B6' }}>
-                    🏢 {branches.find(b => b.id === u.branch_id)?.name || ''}
-                  </span>
-                )}
+                {!u.active && <span style={{ fontSize: '10px', color: '#ff4444' }}>⊘</span>}
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: 0 }}>{u.email} {u.phone && `· ${u.phone}`}</p>
+              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', margin: '2px 0 0' }}>{u.email}</p>
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => { setEditing(u); setForm({ name: u.name, email: u.email, password: u.password, role: u.role, phone: u.phone || '', active: u.active, managed_by: u.managed_by || '', branch_id: u.branch_id || '' }); setShowAdd(true); }} style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: 'rgba(74,144,217,0.1)', border: '1px solid rgba(74,144,217,0.3)', color: '#4A90D9', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontSize: '12px' }}>
+            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+              <button onClick={() => { setEditing(u); setForm({ name: u.name, email: u.email, password: u.password, role: u.role, phone: u.phone || '', active: u.active, managed_by: u.managed_by || '', branch_id: u.branch_id || '' }); setShowAdd(true); }} style={{ padding: '6px 12px', borderRadius: '8px', backgroundColor: 'rgba(74,144,217,0.1)', border: '1px solid rgba(74,144,217,0.2)', color: '#4A90D9', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontSize: '11px' }}>
                 {t('edit', locale)}
               </button>
               {u.id !== currentUser?.id && (
-                <button onClick={() => handleToggleActive(u.id, u.active)} style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: u.active ? 'rgba(255,68,68,0.1)' : 'rgba(37,211,102,0.1)', border: `1px solid ${u.active ? 'rgba(255,68,68,0.3)' : 'rgba(37,211,102,0.3)'}`, color: u.active ? '#ff4444' : '#25D366', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontSize: '12px' }}>
-                  {u.active ? (locale === 'ar' ? '🚫 تعطيل' : '🚫 Disable') : (locale === 'ar' ? '✅ تفعيل' : '✅ Enable')}
+                <button onClick={() => handleToggleActive(u.id, u.active)} style={{ padding: '6px 12px', borderRadius: '8px', backgroundColor: u.active ? 'rgba(255,68,68,0.1)' : 'rgba(37,211,102,0.1)', border: `1px solid ${u.active ? 'rgba(255,68,68,0.2)' : 'rgba(37,211,102,0.2)'}`, color: u.active ? '#ff4444' : '#25D366', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontSize: '11px' }}>
+                  {u.active ? '🚫' : '✅'}
                 </button>
               )}
             </div>
           </div>
-        ))}
-      </div>
+        );
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Super Admins */}
+            {superadmins.length > 0 && (
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
+                <div style={{ padding: '14px 20px', backgroundColor: 'rgba(201,168,76,0.08)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '16px' }}>👑</span>
+                  <span style={{ color: '#C9A84C', fontSize: '14px', fontWeight: 700 }}>{locale === 'ar' ? 'سوبر أدمن' : 'Super Admins'}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>({superadmins.length})</span>
+                </div>
+                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {superadmins.map(renderUser)}
+                </div>
+              </div>
+            )}
+
+            {/* Branch Groups */}
+            {branchGroups.map(group => (group.admins.length > 0 || group.sales.length > 0) && (
+              <div key={group.branch.id} style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
+                <div style={{ padding: '14px 20px', backgroundColor: 'rgba(155,89,182,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '16px' }}>🏢</span>
+                  <span style={{ color: '#9B59B6', fontSize: '14px', fontWeight: 700 }}>{group.branch.name}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>({group.admins.length + group.sales.length})</span>
+                </div>
+                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {group.admins.length > 0 && (
+                    <>
+                      <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', margin: '4px 8px 2px', letterSpacing: '1px' }}>🛡️ {locale === 'ar' ? 'المديرين' : 'ADMINS'}</p>
+                      {group.admins.map(renderUser)}
+                    </>
+                  )}
+                  {group.sales.length > 0 && (
+                    <>
+                      <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', margin: '8px 8px 2px', letterSpacing: '1px' }}>👤 {locale === 'ar' ? 'السيلز' : 'SALES'}</p>
+                      {group.sales.map(renderUser)}
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Unassigned users */}
+            {unassigned.length > 0 && (
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,68,68,0.15)', borderRadius: '16px', overflow: 'hidden' }}>
+                <div style={{ padding: '14px 20px', backgroundColor: 'rgba(255,68,68,0.05)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '16px' }}>⚠️</span>
+                  <span style={{ color: '#ff4444', fontSize: '14px', fontWeight: 700 }}>{locale === 'ar' ? 'بدون فرع' : 'No Branch'}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>({unassigned.length})</span>
+                </div>
+                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {unassigned.map(renderUser)}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Add/Edit Modal */}
       {showAdd && (
