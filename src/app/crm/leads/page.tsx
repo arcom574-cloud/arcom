@@ -322,7 +322,10 @@ export default function LeadsPage() {
 
   const filtered = leads.filter(l => {
     const matchSearch = l.name.includes(search) || l.phone.includes(search);
-    const matchStatus = filterStatus === 'all' || l.status === filterStatus;
+    const matchStatus = filterStatus === 'all' ||
+      (filterStatus === '__unassigned' ? !l.assigned_to :
+       filterStatus === '__duplicate' ? isDuplicate(l) :
+       l.status === filterStatus);
     const matchSource = filterSource === 'all' || l.source === filterSource;
     const matchProject = filterProject === 'all' || l.project_id === filterProject;
     return matchSearch && matchStatus && matchSource && matchProject;
@@ -388,8 +391,13 @@ export default function LeadsPage() {
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           {(user?.role === 'superadmin' || user?.role === 'admin') && (
-            <button onClick={() => setShowBulkTransfer(true)} style={{ backgroundColor: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', color: '#C9A84C', padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>
+            <button onClick={() => setShowBulkTransfer(true)} style={{ backgroundColor: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', color: '#C9A84C', padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Cairo, sans-serif', display: 'flex', alignItems: 'center', gap: '8px' }}>
               {t('bulk_assign', locale)}
+              {leads.filter(l => !l.assigned_to).length > 0 && (
+                <span style={{ backgroundColor: '#C9A84C', color: '#0A0F1A', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800 }}>
+                  {leads.filter(l => !l.assigned_to).length}
+                </span>
+              )}
             </button>
           )}
           {selectedLeads.size > 0 && (
@@ -419,6 +427,8 @@ export default function LeadsPage() {
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ ...inputStyle, width: '170px', cursor: 'pointer' }}>
           <option value="all" style={{ backgroundColor: '#0A0F1A' }}>{t('all_statuses', locale)}</option>
           {Object.entries(statusLabels).map(([k, v]) => <option key={k} value={k} style={{ backgroundColor: '#0A0F1A' }}>{v}</option>)}
+          <option value="__unassigned" style={{ backgroundColor: '#0A0F1A' }}>⚠️ {locale === 'ar' ? 'غير موزع' : 'Unassigned'}</option>
+          <option value="__duplicate" style={{ backgroundColor: '#0A0F1A' }}>🔴 {locale === 'ar' ? 'أرقام مكررة' : 'Duplicates'}</option>
         </select>
         <select value={filterSource} onChange={e => setFilterSource(e.target.value)} style={{ ...inputStyle, width: '160px', cursor: 'pointer' }}>
           <option value="all" style={{ backgroundColor: '#0A0F1A' }}>{t('all_sources', locale)}</option>
