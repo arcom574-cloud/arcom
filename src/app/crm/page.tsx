@@ -71,9 +71,7 @@ export default function CRMDashboard() {
 
       let allData: any[] | null = null;
       if (u.role !== 'sales') {
-        let allQuery = supabaseAdmin.from('leads').select('*, crm_users(name)');
-        if (hasBranchFilter) allQuery = allQuery.eq('branch_id', currentBranch);
-        const { data } = await allQuery;
+        const { data } = await supabaseAdmin.from('leads').select('*, crm_users(name)');
         allData = data;
         if (data) setAllLeads(data);
       }
@@ -154,9 +152,7 @@ export default function CRMDashboard() {
 
       // Admin performance overview (superadmin only)
       if (u.role === 'superadmin' && allData) {
-        let allUsersQuery = supabaseAdmin.from('crm_users').select('id, name, role, managed_by, branch_id').eq('active', true);
-        if (hasBranchFilter) allUsersQuery = allUsersQuery.eq('branch_id', currentBranch);
-        const { data: allUsersData } = await allUsersQuery;
+        const { data: allUsersData } = await supabaseAdmin.from('crm_users').select('id, name, role, managed_by, branch_id').eq('active', true);
         if (allUsersData) setAllUsers(allUsersData);
         const { data: branchesData } = await supabaseAdmin.from('branches').select('*').order('created_at');
         if (branchesData) setBranches(branchesData);
