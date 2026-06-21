@@ -185,6 +185,12 @@ export default function LeadsPage() {
     load();
   };
 
+  const getTeamMembers = () => {
+    if (user?.role === 'superadmin') return users.filter(u => u.role === 'sales' || u.role === 'admin');
+    if (user?.role === 'admin') return users.filter(u => u.managed_by === user.id);
+    return [];
+  };
+
   const handleBulkAssignByCount = async () => {
     const count = parseInt(bulkCount);
     if (!count || !bulkTransferTo) return;
@@ -206,6 +212,33 @@ export default function LeadsPage() {
     setShowBulkTransfer(false);
     setBulkCount('');
     setBulkTransferTo('');
+    setBulkSourceFilter('all');
+    load();
+  };
+
+  const handleAutoDistribute = async () => {
+    const team = getTeamMembers();
+    if (team.length === 0) return;
+
+    let query = supabaseAdmin.from('leads').select('id').is('assigned_to', null).order('created_at', { ascending: true });
+    if (bulkSourceFilter !== 'all') query = query.eq('source', bulkSourceFilter);
+
+    const { data: unassignedLeads } = await query;
+    if (!unassignedLeads || unassignedLeads.length === 0) return;
+
+    for (let i = 0; i < unassignedLeads.length; i++) {
+      const assignTo = team[i % team.length];
+      await supabaseAdmin.from('leads').update({ assigned_to: assignTo.id }).eq('id', unassignedLeads[i].id);
+    }
+
+    await supabaseAdmin.from('lead_activities').insert(
+      unassignedLeads.map((l: any, i: number) => ({
+        lead_id: l.id, user_id: user?.id, type: 'transfer',
+        description: locale === 'ar' ? `توزيع تلقائي بالتساوي على ${team.length} سيلز` : `Auto-distributed equally among ${team.length} reps`,
+      }))
+    );
+
+    setShowBulkTransfer(false);
     setBulkSourceFilter('all');
     load();
   };
@@ -339,7 +372,7 @@ export default function LeadsPage() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          {user?.role === 'superadmin' && (
+          {(user?.role === 'superadmin' || user?.role === 'admin') && (
             <button onClick={() => setShowBulkTransfer(true)} style={{ backgroundColor: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', color: '#C9A84C', padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>
               {t('bulk_assign', locale)}
             </button>
@@ -387,7 +420,7 @@ export default function LeadsPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
           <thead>
             <tr style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
-              {user?.role === 'superadmin' && <th style={{ padding: '12px 10px', width: '36px' }}></th>}
+              {(user?.role === 'superadmin' || user?.role === 'admin') && <th style={{ padding: '12px 10px', width: '36px' }}></th>}
               {[t('name', locale), t('project', locale), 'Score', t('source', locale), t('status', locale), t('last_contact', locale), t('responsible', locale), t('actions', locale)].map(h => (
                 <th key={h} style={{ padding: '12px 10px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
               ))}
@@ -407,7 +440,7 @@ export default function LeadsPage() {
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = isDuplicate(lead) ? 'rgba(255,59,48,0.1)' : isFromChatbot(lead) ? 'rgba(255,100,0,0.08)' : 'rgba(255,255,255,0.02)'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = isDuplicate(lead) ? 'rgba(255,59,48,0.06)' : isFromChatbot(lead) ? 'rgba(255,100,0,0.04)' : 'transparent'}
               >
-                {user?.role === 'superadmin' && (
+                {(user?.role === 'superadmin' || user?.role === 'admin') && (
                   <td style={{ padding: '10px' }}>
                     <input type="checkbox" checked={selectedLeads.has(lead.id)} onChange={() => toggleSelectLead(lead.id)} />
                   </td>
@@ -609,33 +642,57 @@ export default function LeadsPage() {
       {/* Bulk Assign by Count Modal */}
       {showBulkTransfer && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ backgroundColor: '#0A0F1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: '40px', width: '100%', maxWidth: '460px' }}>
-            <h2 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>توزيع جماعي تلقائي</h2>
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', marginBottom: '24px' }}>هياخد أقدم الليدز غير المخصصة لحد ويحولها للأدمن المختار</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ backgroundColor: '#0A0F1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: '40px', width: '100%', maxWidth: '500px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>{locale === 'ar' ? 'توزيع الليدز' : 'Distribute Leads'}</h2>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', marginBottom: '24px' }}>
+              {locale === 'ar' ? `${leads.filter(l => !l.assigned_to).length} ليد غير مخصص · ${getTeamMembers().length} عضو في الفريق` : `${leads.filter(l => !l.assigned_to).length} unassigned leads · ${getTeamMembers().length} team members`}
+            </p>
+
+            {/* Team Members */}
+            <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', marginBottom: '10px' }}>{locale === 'ar' ? 'فريقك' : 'Your Team'}</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {getTeamMembers().map(u => (
+                  <span key={u.id} style={{ padding: '4px 12px', borderRadius: '50px', backgroundColor: 'rgba(74,144,217,0.1)', border: '1px solid rgba(74,144,217,0.2)', color: '#4A90D9', fontSize: '12px' }}>{u.name}</span>
+                ))}
+                {getTeamMembers().length === 0 && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>{locale === 'ar' ? 'لا يوجد أعضاء' : 'No members'}</span>}
+              </div>
+            </div>
+
+            {/* Auto Distribute */}
+            <button onClick={handleAutoDistribute} disabled={getTeamMembers().length === 0} style={{ width: '100%', padding: '14px', borderRadius: '12px', backgroundColor: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.3)', color: '#25D366', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: '14px', marginBottom: '16px' }}>
+              ⚡ {locale === 'ar' ? `توزيع تلقائي بالتساوي على ${getTeamMembers().length} سيلز` : `Auto-distribute equally among ${getTeamMembers().length} reps`}
+            </button>
+
+            <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '12px', marginBottom: '16px' }}>{locale === 'ar' ? 'أو اختار يدوي' : 'or assign manually'}</div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>عدد الليدز</label>
-                <input type="number" value={bulkCount} onChange={e => setBulkCount(e.target.value)} placeholder="مثلاً 20" style={inputStyle} />
+                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>{locale === 'ar' ? 'عدد الليدز' : 'Number of leads'}</label>
+                <input type="number" value={bulkCount} onChange={e => setBulkCount(e.target.value)} placeholder={locale === 'ar' ? 'مثلاً 20' : 'e.g. 20'} style={inputStyle} />
               </div>
               <div>
-                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>من مصدر</label>
+                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>{locale === 'ar' ? 'من مصدر' : 'From source'}</label>
                 <select value={bulkSourceFilter} onChange={e => setBulkSourceFilter(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
                   <option value="all" style={{ backgroundColor: '#0A0F1A' }}>{t('all_sources', locale)}</option>
                   {Object.entries(sourceLabels).map(([k, v]) => <option key={k} value={k} style={{ backgroundColor: '#0A0F1A' }}>{v}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>تحويل لأدمن</label>
+                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>{locale === 'ar' ? 'تحويل لـ' : 'Assign to'}</label>
                 <select value={bulkTransferTo} onChange={e => setBulkTransferTo(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                  <option value="" style={{ backgroundColor: '#0A0F1A' }}>اختر أدمن</option>
-                  {users.filter(u => u.role === 'admin').map(u => <option key={u.id} value={u.id} style={{ backgroundColor: '#0A0F1A' }}>{u.name}</option>)}
+                  <option value="" style={{ backgroundColor: '#0A0F1A' }}>{locale === 'ar' ? 'اختر عضو' : 'Select member'}</option>
+                  {user?.role === 'superadmin'
+                    ? users.map(u => <option key={u.id} value={u.id} style={{ backgroundColor: '#0A0F1A' }}>{u.name} ({u.role === 'admin' ? (locale === 'ar' ? 'أدمن' : 'Admin') : (locale === 'ar' ? 'سيلز' : 'Sales')})</option>)
+                    : getTeamMembers().map(u => <option key={u.id} value={u.id} style={{ backgroundColor: '#0A0F1A' }}>{u.name}</option>)
+                  }
                 </select>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-              <button onClick={() => { setShowBulkTransfer(false); setBulkCount(''); setBulkTransferTo(''); setBulkSourceFilter('all'); }} style={{ flex: 1, padding: '12px', borderRadius: '10px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>إلغاء</button>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+              <button onClick={() => { setShowBulkTransfer(false); setBulkCount(''); setBulkTransferTo(''); setBulkSourceFilter('all'); }} style={{ flex: 1, padding: '12px', borderRadius: '10px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>{t('cancel', locale)}</button>
               <button onClick={handleBulkAssignByCount} disabled={!bulkCount || !bulkTransferTo} style={{ flex: 2, padding: '12px', borderRadius: '10px', backgroundColor: '#C9A84C', border: 'none', color: 'white', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontWeight: 700 }}>
-                توزيع
+                {locale === 'ar' ? 'توزيع يدوي' : 'Manual Assign'}
               </button>
             </div>
           </div>

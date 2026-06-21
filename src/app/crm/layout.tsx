@@ -21,7 +21,7 @@ const navItems = [
   { icon: '📅', key: 'meetings' as const, href: '/crm/meetings', roles: ['superadmin', 'admin', 'sales'] },
   { icon: '📞', key: 'calls' as const, href: '/crm/calls', roles: ['superadmin', 'admin'] },
   { icon: '📈', key: 'reports' as const, href: '/crm/reports', roles: ['superadmin', 'admin'] },
-  { icon: '⚡', key: 'activity_feed' as const, href: '/crm/activity', roles: ['superadmin', 'admin', 'sales'] },
+  { icon: '⚡', key: 'activity_feed' as const, href: '/crm/activity', roles: ['superadmin', 'admin'] },
   { icon: '👤', key: 'users' as const, href: '/crm/users', roles: ['superadmin'] },
   { icon: '📚', key: 'knowledge' as const, href: '/crm/knowledge', roles: ['superadmin', 'admin', 'sales'] },
   { icon: '🔍', key: 'audit_log' as const, href: '/crm/audit', roles: ['superadmin'] },
