@@ -65,12 +65,14 @@ export default function ProjectPage() {
   const images = project.imgs?.length ? project.imgs : [project.img];
 
   useEffect(() => {
-    if (!project || images.length <= 1) return;
+    if (!project) return;
+    const imgs = project.imgs?.length ? project.imgs : [project.img];
+    if (imgs.length <= 1) return;
     const timer = setInterval(() => {
-      setActiveImg(curr => (curr + 1) % images.length);
+      setActiveImg(curr => (curr + 1) % imgs.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [project, images.length]);
+  }, [project]);
 
   return (
     <main style={{ minHeight: '100vh', backgroundColor: '#050A14', color: 'white', fontFamily: 'Cairo, sans-serif' }}>
@@ -89,23 +91,9 @@ export default function ProjectPage() {
         </nav>
       )}
 
-      <style>{`
-        @keyframes kenBurns {
-          0% { transform: scale(1); }
-          100% { transform: scale(1.15); }
-        }
-        @keyframes fadeSlideIn {
-          0% { opacity: 0; transform: scale(1.05); }
-          100% { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
-
       {/* Hero */}
       <div style={{ position: 'relative', height: isMobile ? '60vh' : '85vh', overflow: 'hidden' }}>
-        {/* All images stacked — active one fades in */}
-        {images.map((img, i) => (
-          <div key={i} style={{ position: 'absolute', inset: '-5%', backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: activeImg === i ? 1 : 0, transition: 'opacity 1.2s ease-in-out', animation: activeImg === i ? 'kenBurns 8s ease-out forwards' : 'none' }} />
-        ))}
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${images[activeImg]})`, backgroundSize: 'cover', backgroundPosition: 'center', transition: 'background-image 0s, opacity 1s ease-in-out' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(5,10,20,0.3) 0%, rgba(5,10,20,0.95) 100%)' }} />
         <div style={{ position: 'absolute', inset: 0, background: isAr ? 'linear-gradient(to left, rgba(5,10,20,0.85) 0%, transparent 60%)' : 'linear-gradient(to right, rgba(5,10,20,0.85) 0%, transparent 60%)' }} />
 
