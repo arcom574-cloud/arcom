@@ -67,20 +67,25 @@ export default function ProjectPage() {
   const images = project.imgs?.length ? project.imgs : [project.img];
 
   const goToSlide = (idx: number) => {
-    if (idx === activeImg || isTransitioning) return;
-    setIsTransitioning(true);
+    if (idx === activeImg) return;
     setPrevImg(activeImg);
     setActiveImg(idx);
+    setIsTransitioning(true);
     setTimeout(() => setIsTransitioning(false), 1200);
   };
 
   useEffect(() => {
-    if (images.length <= 1) return;
-    const interval = setInterval(() => {
-      goToSlide((activeImg + 1) % images.length);
+    if (!project || images.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveImg(curr => {
+        setPrevImg(curr);
+        setIsTransitioning(true);
+        setTimeout(() => setIsTransitioning(false), 1200);
+        return (curr + 1) % images.length;
+      });
     }, 5000);
-    return () => clearInterval(interval);
-  }, [activeImg, images.length, isTransitioning]);
+    return () => clearInterval(timer);
+  }, [project, images.length]);
 
   return (
     <main style={{ minHeight: '100vh', backgroundColor: '#050A14', color: 'white', fontFamily: 'Cairo, sans-serif' }}>
