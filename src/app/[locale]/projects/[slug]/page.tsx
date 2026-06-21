@@ -28,6 +28,7 @@ export default function ProjectPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [related, setRelated] = useState<Project[]>([]);
+  const autoSlideRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
@@ -47,6 +48,17 @@ export default function ProjectPage() {
     load();
   }, [slug]);
 
+  useEffect(() => {
+    if (!project) return;
+    const imgs = project.imgs?.length ? project.imgs : [project.img];
+    if (imgs.length <= 1) return;
+    if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+    autoSlideRef.current = setInterval(() => {
+      setActiveImg(prev => (prev + 1) % imgs.length);
+    }, 5000);
+    return () => { if (autoSlideRef.current) clearInterval(autoSlideRef.current); };
+  }, [project]);
+
   if (loading) return (
     <div style={{ minHeight: '100vh', backgroundColor: '#050A14', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: 'white', fontFamily: 'Cairo, sans-serif', fontSize: '16px' }}>جاري التحميل...</div>
@@ -63,19 +75,6 @@ export default function ProjectPage() {
   );
 
   const images = project.imgs?.length ? project.imgs : [project.img];
-
-  const autoSlideRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    if (!project) return;
-    const imgs = project.imgs?.length ? project.imgs : [project.img];
-    if (imgs.length <= 1) return;
-    if (autoSlideRef.current) clearInterval(autoSlideRef.current);
-    autoSlideRef.current = setInterval(() => {
-      setActiveImg(prev => (prev + 1) % imgs.length);
-    }, 5000);
-    return () => { if (autoSlideRef.current) clearInterval(autoSlideRef.current); };
-  }, [project]);
 
   return (
     <main style={{ minHeight: '100vh', backgroundColor: '#050A14', color: 'white', fontFamily: 'Cairo, sans-serif' }}>
