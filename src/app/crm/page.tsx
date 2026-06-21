@@ -211,75 +211,115 @@ export default function CRMDashboard() {
   // ========== HEAD OF SALES DASHBOARD ==========
   if (isHeadSales) {
     const salesUsers = salesPerf;
+    const totalLeadsCount = leads.length;
+    const totalWon = salesUsers.reduce((s, u) => s + u.won, 0);
+    const totalConv = totalLeadsCount > 0 ? Math.round((totalWon / totalLeadsCount) * 100) : 0;
+
     return (
-      <div style={{ padding: '40px', color: 'white', fontFamily: 'Cairo, sans-serif', direction: dir }}>
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 800, margin: '0 0 8px' }}>📊 {locale === 'ar' ? 'متابعة أداء السيلز' : 'Sales Performance Monitor'}</h1>
-          <p style={{ color: 'rgba(255,255,255,0.4)', margin: 0 }}>{locale === 'ar' ? `${salesUsers.length} سيلز · ${leads.length} ليد في فرعك` : `${salesUsers.length} reps · ${leads.length} leads in your branch`}</p>
+      <div style={{ padding: '40px', color: 'white', fontFamily: 'Cairo, sans-serif', direction: dir, maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{ marginBottom: '40px' }}>
+          <p style={{ color: '#E67E22', fontSize: '11px', letterSpacing: '4px', marginBottom: '8px' }}>SALES MONITOR</p>
+          <h1 style={{ fontSize: '32px', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-1px' }}>{locale === 'ar' ? 'متابعة أداء السيلز' : 'Sales Performance'}</h1>
+          <p style={{ color: 'rgba(255,255,255,0.35)', margin: 0, fontSize: '14px' }}>{user?.name} · {locale === 'ar' ? 'هيد أوف سيلز' : 'Head of Sales'}</p>
         </div>
 
+        {/* Summary Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '32px' }}>
+          <div style={{ padding: '20px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(74,144,217,0.12) 0%, rgba(74,144,217,0.04) 100%)', border: '1px solid rgba(74,144,217,0.15)' }}>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: '0 0 6px', letterSpacing: '1px' }}>{locale === 'ar' ? 'السيلز' : 'REPS'}</p>
+            <p style={{ fontSize: '28px', fontWeight: 900, color: '#4A90D9', margin: 0 }}>{salesUsers.length}</p>
+          </div>
+          <div style={{ padding: '20px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(201,168,76,0.04) 100%)', border: '1px solid rgba(201,168,76,0.15)' }}>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: '0 0 6px', letterSpacing: '1px' }}>{locale === 'ar' ? 'إجمالي الليدز' : 'TOTAL LEADS'}</p>
+            <p style={{ fontSize: '28px', fontWeight: 900, color: '#C9A84C', margin: 0 }}>{totalLeadsCount}</p>
+          </div>
+          <div style={{ padding: '20px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(0,255,136,0.12) 0%, rgba(0,255,136,0.04) 100%)', border: '1px solid rgba(0,255,136,0.15)' }}>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: '0 0 6px', letterSpacing: '1px' }}>{locale === 'ar' ? 'صفقات مغلقة' : 'DEALS WON'}</p>
+            <p style={{ fontSize: '28px', fontWeight: 900, color: '#00ff88', margin: 0 }}>{totalWon}</p>
+          </div>
+          <div style={{ padding: '20px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(155,89,182,0.12) 0%, rgba(155,89,182,0.04) 100%)', border: '1px solid rgba(155,89,182,0.15)' }}>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: '0 0 6px', letterSpacing: '1px' }}>{locale === 'ar' ? 'نسبة التحويل' : 'CONVERSION'}</p>
+            <p style={{ fontSize: '28px', fontWeight: 900, color: '#9B59B6', margin: 0 }}>{totalConv}%</p>
+          </div>
+        </div>
+
+        {/* Sales Reps */}
         {salesUsers.length === 0 && (
-          <p style={{ textAlign: 'center', padding: '60px', color: 'rgba(255,255,255,0.3)' }}>{locale === 'ar' ? 'لا يوجد سيلز في فرعك' : 'No sales reps in your branch'}</p>
+          <div style={{ textAlign: 'center', padding: '80px 20px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <p style={{ fontSize: '40px', marginBottom: '12px' }}>👥</p>
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '15px' }}>{locale === 'ar' ? 'لا يوجد سيلز في فرعك' : 'No sales reps in your branch'}</p>
+          </div>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {salesUsers.map((s, i) => {
             const salesLeads = leads.filter(l => l.assigned_to === s.id);
             const target = targets.find(tg => tg.user_id === s.id);
             const targetPct = target?.target_amount && target.target_amount > 0 ? Math.min(Math.round((s.wonValue / target.target_amount) * 100), 100) : null;
+            const statusGroups: Record<string, typeof salesLeads> = {};
+            salesLeads.forEach(l => { if (!statusGroups[l.status]) statusGroups[l.status] = []; statusGroups[l.status].push(l); });
 
             return (
-              <div key={s.id} style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
-                {/* Sales Rep Header */}
-                <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(74,144,217,0.04)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '18px' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '👤'}</span>
+              <div key={s.id} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', overflow: 'hidden' }}>
+
+                {/* Rep Header */}
+                <div style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', background: i === 0 ? 'linear-gradient(135deg, rgba(255,200,0,0.06) 0%, transparent 100%)' : 'transparent' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: i === 0 ? 'linear-gradient(135deg, #FFC800 0%, #E67E22 100%)' : i === 1 ? 'linear-gradient(135deg, #C0C0C0 0%, #888 100%)' : i === 2 ? 'linear-gradient(135deg, #CD7F32 0%, #8B4513 100%)' : 'rgba(74,144,217,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', color: 'white', fontWeight: 900 }}>
+                      {i < 3 ? ['🥇','🥈','🥉'][i] : i + 1}
+                    </div>
                     <div>
-                      <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'white', margin: 0 }}>{s.name}</h3>
-                      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-                        {salesLeads.length} {locale === 'ar' ? 'ليد' : 'leads'} · {s.won} {locale === 'ar' ? 'مبيعة' : 'won'} · {s.conversionRate}%
-                      </p>
+                      <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', margin: '0 0 2px' }}>{s.name}</h3>
+                      <div style={{ display: 'flex', gap: '16px', fontSize: '12px' }}>
+                        <span style={{ color: 'rgba(255,255,255,0.4)' }}>{salesLeads.length} {locale === 'ar' ? 'ليد' : 'leads'}</span>
+                        <span style={{ color: '#00ff88' }}>{s.won} {locale === 'ar' ? 'مبيعة' : 'won'}</span>
+                        <span style={{ color: '#C9A84C' }}>{s.conversionRate}%</span>
+                        {s.wonValue > 0 && <span style={{ color: '#00ff88' }}>{s.wonValue.toLocaleString()} {locale === 'ar' ? 'ج' : 'EGP'}</span>}
+                      </div>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                    {targetPct !== null ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '60px', height: '6px', borderRadius: '50px', backgroundColor: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', borderRadius: '50px', backgroundColor: targetPct >= 100 ? '#00ff88' : targetPct >= 50 ? '#F39C12' : '#ff4444', width: `${targetPct}%` }} />
-                        </div>
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: targetPct >= 100 ? '#00ff88' : targetPct >= 50 ? '#F39C12' : '#ff4444' }}>🎯 {targetPct}%</span>
+                  {targetPct !== null && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '80px', height: '8px', borderRadius: '50px', backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', borderRadius: '50px', backgroundColor: targetPct >= 100 ? '#00ff88' : targetPct >= 50 ? '#F39C12' : '#ff4444', width: `${targetPct}%`, transition: 'width 0.8s ease' }} />
                       </div>
-                    ) : (
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)' }}>{locale === 'ar' ? 'بدون تارجت' : 'No target'}</span>
-                    )}
-                  </div>
+                      <span style={{ fontSize: '14px', fontWeight: 800, color: targetPct >= 100 ? '#00ff88' : targetPct >= 50 ? '#F39C12' : '#ff4444' }}>{targetPct}%</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Leads List */}
+                {/* Pipeline stages with leads */}
                 {salesLeads.length === 0 ? (
-                  <p style={{ padding: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '13px' }}>{locale === 'ar' ? 'لا يوجد ليدز' : 'No leads'}</p>
+                  <div style={{ padding: '24px', textAlign: 'center' }}>
+                    <p style={{ color: 'rgba(255,255,255,0.15)', fontSize: '13px' }}>{locale === 'ar' ? 'لا يوجد ليدز حالياً' : 'No leads currently'}</p>
+                  </div>
                 ) : (
-                  <div style={{ padding: '8px' }}>
-                    {salesLeads.map(lead => {
-                      const stageColor = stages.find(st => st.key === lead.status)?.color || '#888';
-                      const daysSince = lead.last_contact_at ? Math.floor((Date.now() - new Date(lead.last_contact_at).getTime()) / (1000 * 60 * 60 * 24)) : null;
-                      return (
-                        <div key={lead.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '10px', marginBottom: '4px', backgroundColor: 'rgba(255,255,255,0.01)' }}>
-                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: stageColor, flexShrink: 0, boxShadow: `0 0 6px ${stageColor}` }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: '13px', fontWeight: 600, color: 'white', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead.name}</p>
-                          </div>
-                          <span style={{ backgroundColor: `${stageColor}20`, border: `1px solid ${stageColor}40`, borderRadius: '50px', padding: '2px 10px', color: stageColor, fontSize: '10px', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                            {statusLabelMap[lead.status] || lead.status}
-                          </span>
-                          {daysSince !== null && (
-                            <span style={{ fontSize: '10px', color: daysSince > 3 ? '#ff4444' : daysSince > 1 ? '#F39C12' : '#25D366', whiteSpace: 'nowrap' }}>
-                              {daysSince === 0 ? (locale === 'ar' ? 'اليوم' : 'Today') : daysSince === 1 ? (locale === 'ar' ? 'أمس' : 'Yesterday') : `${daysSince} ${locale === 'ar' ? 'يوم' : 'd'}`}
-                            </span>
-                          )}
+                  <div style={{ padding: '16px 20px' }}>
+                    {stages.filter(st => statusGroups[st.key]?.length).map(stage => (
+                      <div key={stage.key} style={{ marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                          <div style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: stage.color }} />
+                          <span style={{ fontSize: '12px', fontWeight: 700, color: stage.color }}>{statusLabelMap[stage.key]}</span>
+                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>({statusGroups[stage.key].length})</span>
                         </div>
-                      );
-                    })}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', paddingRight: '18px' }}>
+                          {statusGroups[stage.key].map(lead => {
+                            const daysSince = lead.last_contact_at ? Math.floor((Date.now() - new Date(lead.last_contact_at).getTime()) / (1000 * 60 * 60 * 24)) : null;
+                            return (
+                              <div key={lead.id} style={{ padding: '6px 12px', borderRadius: '8px', backgroundColor: `${stage.color}08`, border: `1px solid ${stage.color}20`, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '12px', color: 'white', fontWeight: 500 }}>{lead.name}</span>
+                                {daysSince !== null && (
+                                  <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '50px', backgroundColor: daysSince > 3 ? 'rgba(255,68,68,0.15)' : daysSince > 1 ? 'rgba(243,156,18,0.15)' : 'rgba(37,211,102,0.15)', color: daysSince > 3 ? '#ff4444' : daysSince > 1 ? '#F39C12' : '#25D366' }}>
+                                    {daysSince === 0 ? (locale === 'ar' ? 'اليوم' : 'today') : daysSince === 1 ? (locale === 'ar' ? 'أمس' : '1d') : `${daysSince}${locale === 'ar' ? ' يوم' : 'd'}`}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
