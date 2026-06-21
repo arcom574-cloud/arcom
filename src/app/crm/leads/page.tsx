@@ -451,9 +451,11 @@ export default function LeadsPage() {
               </a>
             </>
           )}
-          <button onClick={() => setShowAdd(true)} style={{ backgroundColor: '#1B4B8A', color: 'white', padding: '12px 28px', borderRadius: '12px', border: 'none', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>
-            {t('add_lead', locale)}
-          </button>
+          {canEdit && (
+            <button onClick={() => setShowAdd(true)} style={{ backgroundColor: '#1B4B8A', color: 'white', padding: '12px 28px', borderRadius: '12px', border: 'none', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>
+              {t('add_lead', locale)}
+            </button>
+          )}
         </div>
       </div>
 
