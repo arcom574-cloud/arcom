@@ -345,17 +345,44 @@ export default function CRMDashboard() {
                 {/* Sales in this branch */}
                 {branchSales.length > 0 && (
                   <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '12px 16px' }}>
-                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', margin: '0 0 8px' }}>🏆 {locale === 'ar' ? 'سيلز الفرع' : 'Branch Sales'}</p>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px' }}>
-                      {branchSales.slice(0, 6).map((s, i) => (
-                        <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '10px', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
-                          <span style={{ fontSize: '12px', color: i === 0 ? '#FFC800' : 'rgba(255,255,255,0.3)', fontWeight: 700 }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}</span>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: '12px', fontWeight: 600, color: 'white', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</p>
-                            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', margin: 0 }}>{s.total} {locale === 'ar' ? 'ليد' : 'leads'} · {s.won} {locale === 'ar' ? 'مبيعة' : 'won'}</p>
+                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', margin: '0 0 10px', letterSpacing: '1px' }}>🏆 {locale === 'ar' ? 'أداء السيلز' : 'Sales Performance'}</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {branchSales.map((s, i) => {
+                        const target = targets.find(tg => tg.user_id === s.id);
+                        const targetPct = target?.target_amount && target.target_amount > 0 ? Math.min(Math.round((s.wonValue / target.target_amount) * 100), 100) : null;
+                        const adminName = allUsers.find(u => u.id === (allUsers.find(x => x.id === s.id)?.managed_by))?.name;
+                        return (
+                          <div key={s.id} style={{ padding: '10px 12px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                              <span style={{ fontSize: '14px', fontWeight: 700, color: i === 0 ? '#FFC800' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'rgba(255,255,255,0.3)', width: '20px' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}</span>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontSize: '13px', fontWeight: 700, color: 'white' }}>{s.name}</span>
+                                  {adminName && <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)' }}>← {adminName}</span>}
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '12px', fontSize: '11px' }}>
+                                <span style={{ color: 'rgba(255,255,255,0.4)' }}>{s.total} {locale === 'ar' ? 'ليد' : 'leads'}</span>
+                                <span style={{ color: '#00ff88', fontWeight: 700 }}>{s.won} {locale === 'ar' ? 'مبيعة' : 'won'}</span>
+                                <span style={{ color: '#C9A84C' }}>{s.conversionRate}%</span>
+                              </div>
+                            </div>
+                            {/* Target progress */}
+                            {targetPct !== null && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', minWidth: '40px' }}>{locale === 'ar' ? 'التارجت' : 'Target'}</span>
+                                <div style={{ flex: 1, height: '6px', borderRadius: '50px', backgroundColor: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                                  <div style={{ height: '100%', borderRadius: '50px', backgroundColor: targetPct >= 100 ? '#00ff88' : targetPct >= 50 ? '#F39C12' : '#ff4444', width: `${targetPct}%`, transition: 'width 0.5s' }} />
+                                </div>
+                                <span style={{ fontSize: '11px', fontWeight: 700, color: targetPct >= 100 ? '#00ff88' : targetPct >= 50 ? '#F39C12' : '#ff4444', minWidth: '35px', textAlign: 'center' }}>{targetPct}%</span>
+                              </div>
+                            )}
+                            {targetPct === null && (
+                              <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', margin: '2px 0 0 28px' }}>{locale === 'ar' ? 'بدون تارجت' : 'No target set'}</p>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
