@@ -421,7 +421,7 @@ export default function LeadsPage() {
           <thead>
             <tr style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
               {(user?.role === 'superadmin' || user?.role === 'admin') && <th style={{ padding: '12px 10px', width: '36px' }}></th>}
-              {[t('name', locale), t('project', locale), 'Score', t('source', locale), t('status', locale), t('last_contact', locale), t('responsible', locale), t('actions', locale)].map(h => (
+              {[t('name', locale), t('project', locale), 'Score', t('source', locale), t('status', locale), t('last_contact', locale), ...(user?.role === 'superadmin' ? [locale === 'ar' ? 'الأدمن' : 'Admin', locale === 'ar' ? 'السيلز' : 'Sales Rep'] : [locale === 'ar' ? 'السيلز' : 'Sales Rep']), t('actions', locale)].map(h => (
                 <th key={h} style={{ padding: '12px 10px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
@@ -501,9 +501,26 @@ export default function LeadsPage() {
                     <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)' }}>{t('not_done', locale)}</span>
                   )}
                 </td>
-                {/* المسؤول */}
-                <td style={{ padding: '10px', color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>
-                  {(lead.crm_users as any)?.name || <span style={{ color: 'rgba(255,255,255,0.2)' }}>-</span>}
+                {/* الأدمن (superadmin only) */}
+                {user?.role === 'superadmin' && (
+                  <td style={{ padding: '10px', fontSize: '12px' }}>
+                    {(() => {
+                      const assignedUser = users.find(u => u.id === lead.assigned_to);
+                      if (!assignedUser) return <span style={{ color: 'rgba(255,255,255,0.2)' }}>-</span>;
+                      if (assignedUser.role === 'admin') return <span style={{ color: '#9B59B6', fontWeight: 600 }}>{assignedUser.name}</span>;
+                      const adminUser = users.find(u => u.id === assignedUser.managed_by);
+                      return adminUser ? <span style={{ color: '#9B59B6' }}>{adminUser.name}</span> : <span style={{ color: 'rgba(255,255,255,0.2)' }}>-</span>;
+                    })()}
+                  </td>
+                )}
+                {/* السيلز */}
+                <td style={{ padding: '10px', fontSize: '12px' }}>
+                  {(() => {
+                    const assignedUser = users.find(u => u.id === lead.assigned_to);
+                    if (!assignedUser) return <span style={{ color: 'rgba(255,255,255,0.2)' }}>-</span>;
+                    if (assignedUser.role === 'sales') return <span style={{ color: '#4A90D9' }}>{assignedUser.name}</span>;
+                    return <span style={{ color: 'rgba(255,255,255,0.4)' }}>{assignedUser.name}</span>;
+                  })()}
                 </td>
                 {/* إجراءات */}
                 <td style={{ padding: '10px' }}>
