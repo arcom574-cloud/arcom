@@ -129,6 +129,7 @@ export default function CRMDashboard() {
       if (u.role !== 'sales') {
         let usersQuery = supabaseAdmin.from('crm_users').select('id, name, role, managed_by, branch_id').eq('active', true).in('role', ['sales', 'admin']);
         if (u.role === 'admin') usersQuery = usersQuery.eq('managed_by', u.id);
+        if (u.role === 'head_sales' && u.branch_id) usersQuery = usersQuery.eq('branch_id', u.branch_id);
         if (hasBranchFilter) usersQuery = usersQuery.eq('branch_id', currentBranch);
 
         const { data: salesUsers } = await usersQuery;
@@ -203,12 +204,98 @@ export default function CRMDashboard() {
   const wonLeads = leads.filter(l => l.status === 'closed_won');
   const conversionRate = leads.length > 0 ? Math.round((wonLeads.length / leads.length) * 100) : 0;
 
+  const statusLabelMap: Record<string, string> = locale === 'ar'
+    ? { new: 'جديد', contacted: 'تم التواصل', meeting_scheduled: 'موعد', site_visit: 'زيارة', negotiation: 'تفاوض', contract: 'عقد', closed_won: 'تم البيع', closed_lost: 'فاقد', postponed: 'مؤجل', interested: 'مهتم' }
+    : { new: 'New', contacted: 'Contacted', meeting_scheduled: 'Meeting', site_visit: 'Visit', negotiation: 'Negotiation', contract: 'Contract', closed_won: 'Won', closed_lost: 'Lost', postponed: 'Postponed', interested: 'Interested' };
+
+  // ========== HEAD OF SALES DASHBOARD ==========
+  if (isHeadSales) {
+    const salesUsers = salesPerf;
+    return (
+      <div style={{ padding: '40px', color: 'white', fontFamily: 'Cairo, sans-serif', direction: dir }}>
+        <div style={{ marginBottom: '32px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 800, margin: '0 0 8px' }}>📊 {locale === 'ar' ? 'متابعة أداء السيلز' : 'Sales Performance Monitor'}</h1>
+          <p style={{ color: 'rgba(255,255,255,0.4)', margin: 0 }}>{locale === 'ar' ? `${salesUsers.length} سيلز · ${leads.length} ليد في فرعك` : `${salesUsers.length} reps · ${leads.length} leads in your branch`}</p>
+        </div>
+
+        {salesUsers.length === 0 && (
+          <p style={{ textAlign: 'center', padding: '60px', color: 'rgba(255,255,255,0.3)' }}>{locale === 'ar' ? 'لا يوجد سيلز في فرعك' : 'No sales reps in your branch'}</p>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {salesUsers.map((s, i) => {
+            const salesLeads = leads.filter(l => l.assigned_to === s.id);
+            const target = targets.find(tg => tg.user_id === s.id);
+            const targetPct = target?.target_amount && target.target_amount > 0 ? Math.min(Math.round((s.wonValue / target.target_amount) * 100), 100) : null;
+
+            return (
+              <div key={s.id} style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
+                {/* Sales Rep Header */}
+                <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(74,144,217,0.04)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '18px' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '👤'}</span>
+                    <div>
+                      <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'white', margin: 0 }}>{s.name}</h3>
+                      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+                        {salesLeads.length} {locale === 'ar' ? 'ليد' : 'leads'} · {s.won} {locale === 'ar' ? 'مبيعة' : 'won'} · {s.conversionRate}%
+                      </p>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    {targetPct !== null ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '60px', height: '6px', borderRadius: '50px', backgroundColor: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', borderRadius: '50px', backgroundColor: targetPct >= 100 ? '#00ff88' : targetPct >= 50 ? '#F39C12' : '#ff4444', width: `${targetPct}%` }} />
+                        </div>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: targetPct >= 100 ? '#00ff88' : targetPct >= 50 ? '#F39C12' : '#ff4444' }}>🎯 {targetPct}%</span>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)' }}>{locale === 'ar' ? 'بدون تارجت' : 'No target'}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Leads List */}
+                {salesLeads.length === 0 ? (
+                  <p style={{ padding: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '13px' }}>{locale === 'ar' ? 'لا يوجد ليدز' : 'No leads'}</p>
+                ) : (
+                  <div style={{ padding: '8px' }}>
+                    {salesLeads.map(lead => {
+                      const stageColor = stages.find(st => st.key === lead.status)?.color || '#888';
+                      const daysSince = lead.last_contact_at ? Math.floor((Date.now() - new Date(lead.last_contact_at).getTime()) / (1000 * 60 * 60 * 24)) : null;
+                      return (
+                        <div key={lead.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '10px', marginBottom: '4px', backgroundColor: 'rgba(255,255,255,0.01)' }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: stageColor, flexShrink: 0, boxShadow: `0 0 6px ${stageColor}` }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: '13px', fontWeight: 600, color: 'white', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead.name}</p>
+                          </div>
+                          <span style={{ backgroundColor: `${stageColor}20`, border: `1px solid ${stageColor}40`, borderRadius: '50px', padding: '2px 10px', color: stageColor, fontSize: '10px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            {statusLabelMap[lead.status] || lead.status}
+                          </span>
+                          {daysSince !== null && (
+                            <span style={{ fontSize: '10px', color: daysSince > 3 ? '#ff4444' : daysSince > 1 ? '#F39C12' : '#25D366', whiteSpace: 'nowrap' }}>
+                              {daysSince === 0 ? (locale === 'ar' ? 'اليوم' : 'Today') : daysSince === 1 ? (locale === 'ar' ? 'أمس' : 'Yesterday') : `${daysSince} ${locale === 'ar' ? 'يوم' : 'd'}`}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: '40px', color: 'white', fontFamily: 'Cairo, sans-serif', direction: dir }}>
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: 800, margin: '0 0 8px' }}>{t('welcome', locale)} {user?.name} 👋</h1>
         <p style={{ color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-          {isSuperAdmin ? t('overview_all', locale) : user?.role === 'admin' ? t('overview_team', locale) : isHeadSales ? (locale === 'ar' ? 'متابعة أداء فريق المبيعات' : 'Sales Team Performance Monitoring') : t('overview_personal', locale)}
+          {isSuperAdmin ? t('overview_all', locale) : user?.role === 'admin' ? t('overview_team', locale) : t('overview_personal', locale)}
         </p>
       </div>
 
