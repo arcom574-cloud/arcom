@@ -70,9 +70,9 @@ export default function Home() {
 
       {(!mounted || !isMobile) && <Footer />}
 
-      {mounted && !isMobile && (
+      {mounted && (
         <>
-          <a href="https://wa.me/201000000000" target="_blank" style={{ position: 'fixed', bottom: '32px', left: '32px', width: '58px', height: '58px', backgroundColor: '#25D366', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', boxShadow: '0 4px 24px rgba(37,211,102,0.4)', textDecoration: 'none', zIndex: 50 }}>💬</a>
+          {!isMobile && <a href="https://wa.me/201000000000" target="_blank" style={{ position: 'fixed', bottom: '32px', left: '32px', width: '58px', height: '58px', backgroundColor: '#25D366', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', boxShadow: '0 4px 24px rgba(37,211,102,0.4)', textDecoration: 'none', zIndex: 50 }}>💬</a>}
           <ChatBot />
         </>
       )}

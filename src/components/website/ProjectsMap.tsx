@@ -197,7 +197,7 @@ export default function ProjectsMap() {
   if (projects.length === 0) return null;
 
   return (
-    <section style={{ padding: isMobile ? '60px 0' : '100px 0', backgroundColor: '#050A14', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ padding: isMobile ? '60px 0' : '100px 0', backgroundColor: '#050A14', position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '100vw' }}>
       {/* Background glow */}
       {!isMobile && <div style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)', width: '800px', height: '800px', background: 'radial-gradient(circle, rgba(27,75,138,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />}
 

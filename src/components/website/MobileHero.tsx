@@ -1,13 +1,23 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function MobileHero() {
   const params = useParams();
   const locale = params.locale as string;
   const isAr = locale === 'ar';
+  const [heroImg, setHeroImg] = useState('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80');
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const { data } = await supabase.from('settings').select('*').eq('key', 'hero_img');
+      if (data?.[0]?.value) setHeroImg(data[0].value);
+    };
+    loadSettings();
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -24,7 +34,7 @@ export default function MobileHero() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundImage: 'url(https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80)',
+      backgroundImage: `url(${heroImg})`,
       backgroundSize: 'cover', backgroundPosition: 'center',
       position: 'relative', direction: 'rtl',
       display: 'flex', flexDirection: 'column',

@@ -205,7 +205,7 @@ export default function ChatBot() {
       {/* Chat Button */}
       <button
         onClick={() => setOpen(!open)}
-        style={{ position: 'fixed', bottom: '32px', left: '100px', width: '58px', height: '58px', backgroundColor: '#1B4B8A', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', border: 'none', cursor: 'pointer', zIndex: 50, transition: 'transform 0.3s', animation: !open ? 'pulse 2.5s infinite' : 'none' }}
+        style={{ position: 'fixed', bottom: '90px', left: '20px', width: '52px', height: '52px', backgroundColor: '#1B4B8A', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', border: 'none', cursor: 'pointer', zIndex: 50, transition: 'transform 0.3s', animation: !open ? 'pulse 2.5s infinite' : 'none' }}
         onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
         onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
       >
@@ -213,7 +213,7 @@ export default function ChatBot() {
       </button>
 
       {open && (
-        <div style={{ position: 'fixed', bottom: '100px', left: '32px', width: '370px', height: '550px', backgroundColor: '#0A0F1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', display: 'flex', flexDirection: 'column', zIndex: 50, boxShadow: '0 20px 60px rgba(0,0,0,0.6)', overflow: 'hidden', fontFamily: 'Cairo, sans-serif' }}>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, top: typeof window !== 'undefined' && window.innerWidth <= 768 ? 0 : 'auto', width: typeof window !== 'undefined' && window.innerWidth <= 768 ? '100%' : '370px', height: typeof window !== 'undefined' && window.innerWidth <= 768 ? '100%' : '550px', ...(typeof window !== 'undefined' && window.innerWidth > 768 ? { bottom: '100px', left: '32px', borderRadius: '24px' } : { borderRadius: 0 }), backgroundColor: '#0A0F1A', border: typeof window !== 'undefined' && window.innerWidth <= 768 ? 'none' : '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', zIndex: 9999, boxShadow: '0 20px 60px rgba(0,0,0,0.6)', overflow: 'hidden', fontFamily: 'Cairo, sans-serif' }}>
 
           {/* Header */}
           <div style={{ padding: '16px 20px', background: 'linear-gradient(135deg, #1B4B8A 0%, #4A90D9 100%)', display: 'flex', alignItems: 'center', gap: '12px' }}>
