@@ -7,10 +7,11 @@ import { t } from '@/lib/crm/translations';
 type User = {
   id: string; name: string; email: string; password: string;
   role: string; phone: string; active: boolean; created_at: string;
-  managed_by?: string;
+  managed_by?: string; branch_id?: string;
 };
+type Branch = { id: string; name: string; };
 
-const emptyUser = { name: '', email: '', password: '', role: 'sales', phone: '', active: true, managed_by: '' };
+const emptyUser = { name: '', email: '', password: '', role: 'sales', phone: '', active: true, managed_by: '', branch_id: '' };
 
 export default function UsersPage() {
   const { locale, dir } = useCrmLocale();
@@ -21,6 +22,7 @@ export default function UsersPage() {
   const [editing, setEditing] = useState<User | null>(null);
   const [form, setForm] = useState(emptyUser);
   const [saving, setSaving] = useState(false);
+  const [branches, setBranches] = useState<Branch[]>([]);
 
   useEffect(() => {
     const stored = localStorage.getItem('crm_user');
@@ -34,6 +36,8 @@ export default function UsersPage() {
   const load = async () => {
     const { data } = await supabaseAdmin.from('crm_users').select('*').order('created_at');
     if (data) setUsers(data);
+    const { data: branchData } = await supabaseAdmin.from('branches').select('*').order('created_at');
+    if (branchData) setBranches(branchData);
     setLoading(false);
   };
 
@@ -105,6 +109,11 @@ export default function UsersPage() {
                   </span>
                 )}
                 {!u.active && <span style={{ backgroundColor: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.3)', borderRadius: '50px', padding: '2px 10px', fontSize: '11px', color: '#ff4444' }}>{locale === 'ar' ? 'معطل' : 'Disabled'}</span>}
+                {u.branch_id && branches.length > 0 && (
+                  <span style={{ backgroundColor: 'rgba(155,89,182,0.1)', border: '1px solid rgba(155,89,182,0.3)', borderRadius: '50px', padding: '2px 10px', fontSize: '11px', color: '#9B59B6' }}>
+                    🏢 {branches.find(b => b.id === u.branch_id)?.name || ''}
+                  </span>
+                )}
               </div>
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: 0 }}>{u.email} {u.phone && `· ${u.phone}`}</p>
             </div>
@@ -160,6 +169,15 @@ export default function UsersPage() {
                   <select value={form.managed_by} onChange={e => setForm({ ...form, managed_by: e.target.value })} style={{ ...inputStyle, cursor: 'pointer' }}>
                     <option value="" style={{ backgroundColor: '#0A0F1A' }}>{locale === 'ar' ? 'غير محدد' : 'Unassigned'}</option>
                     {admins.map(a => <option key={a.id} value={a.id} style={{ backgroundColor: '#0A0F1A' }}>{a.name}</option>)}
+                  </select>
+                </div>
+              )}
+              {branches.length > 0 && (
+                <div>
+                  <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>{locale === 'ar' ? 'الفرع' : 'Branch'}</label>
+                  <select value={form.branch_id} onChange={e => setForm({ ...form, branch_id: e.target.value })} style={{ ...inputStyle, cursor: 'pointer' }}>
+                    <option value="" style={{ backgroundColor: '#0A0F1A' }}>{locale === 'ar' ? 'اختر فرع' : 'Select Branch'}</option>
+                    {branches.map(b => <option key={b.id} value={b.id} style={{ backgroundColor: '#0A0F1A' }}>{b.name}</option>)}
                   </select>
                 </div>
               )}

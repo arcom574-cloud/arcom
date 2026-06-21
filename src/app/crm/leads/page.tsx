@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import * as XLSX from 'xlsx';
 import { useCrmLocale } from '@/lib/crm/useCrmLocale';
 import { t, getStatusLabel, getSourceLabel } from '@/lib/crm/translations';
+import { useBranch } from '@/lib/crm/useBranch';
 
 type Lead = {
   id: string; name: string; phone: string; email: string;
@@ -50,6 +51,7 @@ const emptyLead = {
 
 export default function LeadsPage() {
   const { locale, dir } = useCrmLocale();
+  const { branchFilter } = useBranch();
   const statusLabels = getStatusLabel(locale);
   const sourceLabels = getSourceLabel(locale);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -95,6 +97,11 @@ export default function LeadsPage() {
       const { data: teamMembers } = await supabaseAdmin.from('crm_users').select('id').eq('managed_by', u.id);
       const teamIds = [u.id, ...(teamMembers || []).map((t: any) => t.id)];
       query = query.in('assigned_to', teamIds);
+    } else if (u.role === 'superadmin') {
+      const savedBranch = localStorage.getItem('crm_selected_branch');
+      if (savedBranch && savedBranch !== 'all') {
+        query = query.eq('branch_id', savedBranch);
+      }
     }
 
     const { data } = await query;
@@ -132,7 +139,9 @@ export default function LeadsPage() {
   const handleAdd = async () => {
     if (!form.name || !form.phone) return;
     setSaving(true);
-    await supabaseAdmin.from('leads').insert({ ...form, assigned_to: form.assigned_to || null });
+    const stored = localStorage.getItem('crm_user');
+    const u = stored ? JSON.parse(stored) : null;
+    await supabaseAdmin.from('leads').insert({ ...form, assigned_to: form.assigned_to || null, branch_id: u?.branch_id || null });
     setSaving(false);
     setShowAdd(false);
     setForm(emptyLead);

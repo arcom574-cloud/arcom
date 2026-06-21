@@ -6,6 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import Notifications from '@/components/crm/Notifications';
 import { useCrmLocale } from '@/lib/crm/useCrmLocale';
 import { t } from '@/lib/crm/translations';
+import { useBranch } from '@/lib/crm/useBranch';
 
 type User = {
   id: string; name: string; email: string; role: string;
@@ -31,6 +32,7 @@ const navItems = [
 export default function CRMLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { locale, toggleLocale, isAr, dir } = useCrmLocale();
+  const { branches, selectedBranch, setSelectedBranch } = useBranch();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -126,7 +128,13 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
       <div style={{ width: '240px', backgroundColor: isMobile ? '#0A0F1A' : 'rgba(255,255,255,0.02)', borderLeft: isAr ? '1px solid rgba(255,255,255,0.06)' : 'none', borderRight: isAr ? 'none' : '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, [isAr ? 'right' : 'left']: 0, bottom: 0, zIndex: 40, ...(isMobile ? { transform: sidebarOpen ? 'translateX(0)' : (isAr ? 'translateX(100%)' : 'translateX(-100%)'), transition: 'transform 0.3s ease' } : {}) }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <img src="/logo.png" alt="Arcom" style={{ height: '50px', objectFit: 'contain' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {user?.role === 'superadmin' && branches.length > 0 && (
+              <select value={selectedBranch} onChange={e => setSelectedBranch(e.target.value)} style={{ background: 'rgba(155,89,182,0.1)', border: '1px solid rgba(155,89,182,0.25)', borderRadius: '8px', color: '#9B59B6', padding: '4px 8px', fontSize: '10px', fontWeight: 700, fontFamily: 'Cairo, sans-serif', outline: 'none', cursor: 'pointer' }}>
+                <option value="all" style={{ backgroundColor: '#0A0F1A' }}>{isAr ? 'كل الفروع' : 'All Branches'}</option>
+                {branches.map(b => <option key={b.id} value={b.id} style={{ backgroundColor: '#0A0F1A' }}>{b.name}</option>)}
+              </select>
+            )}
             <button onClick={toggleLocale} style={{ background: 'rgba(74,144,217,0.1)', border: '1px solid rgba(74,144,217,0.25)', borderRadius: '8px', color: '#4A90D9', cursor: 'pointer', padding: '4px 10px', fontSize: '11px', fontWeight: 700, fontFamily: 'Cairo, sans-serif' }}>
               {isAr ? 'EN' : 'عربي'}
             </button>
