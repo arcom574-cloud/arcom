@@ -15,7 +15,7 @@ type Lead = {
   created_at: string; crm_users?: { name: string }; projects?: { name_ar: string };
 };
 
-type User = { id: string; name: string; role: string; managed_by?: string; };
+type User = { id: string; name: string; role: string; managed_by?: string; branch_id?: string; };
 type Project = { id: string; name_ar: string; slug: string; active: boolean; };
 
 const statusColor: Record<string, string> = {
@@ -109,7 +109,7 @@ export default function LeadsPage() {
     if (data) setLeads(data);
 
     if (u.role !== 'sales') {
-      let usersQuery = supabaseAdmin.from('crm_users').select('id, name, role, managed_by').eq('active', true);
+      let usersQuery = supabaseAdmin.from('crm_users').select('id, name, role, managed_by, branch_id').eq('active', true);
       if (u.role === 'admin') usersQuery = usersQuery.eq('managed_by', u.id);
       const { data: usersData } = await usersQuery;
       if (usersData) setUsers(usersData);
@@ -149,9 +149,14 @@ export default function LeadsPage() {
     load();
   };
 
+  const getBranchForUser = (userId: string) => {
+    const u = users.find(x => x.id === userId);
+    return u?.branch_id || null;
+  };
+
   const handleTransfer = async (leadId: string) => {
     if (!transferTo) return;
-    await supabaseAdmin.from('leads').update({ assigned_to: transferTo }).eq('id', leadId);
+    await supabaseAdmin.from('leads').update({ assigned_to: transferTo, branch_id: getBranchForUser(transferTo) }).eq('id', leadId);
     if (hideComments) {
       await supabaseAdmin.from('lead_comments').update({ visible: false }).eq('lead_id', leadId);
     }
@@ -182,7 +187,7 @@ export default function LeadsPage() {
   const handleBulkTransferSelected = async () => {
     if (!transferTo || selectedLeads.size === 0) return;
     for (const leadId of selectedLeads) {
-      await supabaseAdmin.from('leads').update({ assigned_to: transferTo }).eq('id', leadId);
+      await supabaseAdmin.from('leads').update({ assigned_to: transferTo, branch_id: getBranchForUser(transferTo) }).eq('id', leadId);
     }
     await supabaseAdmin.from('lead_activities').insert(
       Array.from(selectedLeads).map(leadId => ({
@@ -212,7 +217,7 @@ export default function LeadsPage() {
     if (!unassignedLeads || unassignedLeads.length === 0) return;
 
     const ids = unassignedLeads.map((l: any) => l.id);
-    await supabaseAdmin.from('leads').update({ assigned_to: bulkTransferTo }).in('id', ids);
+    await supabaseAdmin.from('leads').update({ assigned_to: bulkTransferTo, branch_id: getBranchForUser(bulkTransferTo) }).in('id', ids);
     await supabaseAdmin.from('lead_activities').insert(
       ids.map((leadId: string) => ({
         lead_id: leadId, user_id: user?.id, type: 'transfer', description: `تخصيص جماعي تلقائي (${count} ليد)`,
@@ -238,7 +243,7 @@ export default function LeadsPage() {
 
     for (let i = 0; i < unassignedLeads.length; i++) {
       const assignTo = team[i % team.length];
-      await supabaseAdmin.from('leads').update({ assigned_to: assignTo.id }).eq('id', unassignedLeads[i].id);
+      await supabaseAdmin.from('leads').update({ assigned_to: assignTo.id, branch_id: assignTo.branch_id || null }).eq('id', unassignedLeads[i].id);
     }
 
     await supabaseAdmin.from('lead_activities').insert(
