@@ -213,7 +213,10 @@ export default function ChatBot() {
       </button>
 
       {open && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, top: typeof window !== 'undefined' && window.innerWidth <= 768 ? 0 : 'auto', width: typeof window !== 'undefined' && window.innerWidth <= 768 ? '100%' : '370px', height: typeof window !== 'undefined' && window.innerWidth <= 768 ? '100%' : '550px', ...(typeof window !== 'undefined' && window.innerWidth > 768 ? { bottom: '100px', left: '32px', borderRadius: '24px' } : { borderRadius: 0 }), backgroundColor: '#0A0F1A', border: typeof window !== 'undefined' && window.innerWidth <= 768 ? 'none' : '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', zIndex: 9999, boxShadow: '0 20px 60px rgba(0,0,0,0.6)', overflow: 'hidden', fontFamily: 'Cairo, sans-serif' }}>
+        <div style={typeof window !== 'undefined' && window.innerWidth <= 768
+          ? { position: 'fixed' as const, inset: 0, backgroundColor: '#0A0F1A', display: 'flex', flexDirection: 'column' as const, zIndex: 9999, overflow: 'hidden', fontFamily: 'Cairo, sans-serif' }
+          : { position: 'fixed' as const, bottom: '100px', left: '32px', width: '370px', height: '550px', backgroundColor: '#0A0F1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', display: 'flex', flexDirection: 'column' as const, zIndex: 9999, boxShadow: '0 20px 60px rgba(0,0,0,0.6)', overflow: 'hidden', fontFamily: 'Cairo, sans-serif' }
+        }>
 
           {/* Header */}
           <div style={{ padding: '16px 20px', background: 'linear-gradient(135deg, #1B4B8A 0%, #4A90D9 100%)', display: 'flex', alignItems: 'center', gap: '12px' }}>
