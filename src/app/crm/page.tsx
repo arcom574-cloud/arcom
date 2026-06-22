@@ -127,9 +127,14 @@ export default function CRMDashboard() {
 
       // Sales performance (superadmin, admin, head_sales)
       if (u.role !== 'sales') {
-        let usersQuery = supabaseAdmin.from('crm_users').select('id, name, role, managed_by, branch_id').eq('active', true).in('role', ['sales', 'admin']);
-        if (u.role === 'admin') usersQuery = usersQuery.eq('managed_by', u.id);
-        if (u.role === 'head_sales' && u.branch_id) usersQuery = usersQuery.eq('branch_id', u.branch_id);
+        let usersQuery = supabaseAdmin.from('crm_users').select('id, name, role, managed_by, branch_id').eq('active', true);
+        if (u.role === 'head_sales') {
+          usersQuery = usersQuery.eq('role', 'sales');
+          if (u.branch_id) usersQuery = usersQuery.eq('branch_id', u.branch_id);
+        } else {
+          usersQuery = usersQuery.in('role', ['sales', 'admin']);
+          if (u.role === 'admin') usersQuery = usersQuery.eq('managed_by', u.id);
+        }
         if (hasBranchFilter) usersQuery = usersQuery.eq('branch_id', currentBranch);
 
         const { data: salesUsers } = await usersQuery;
