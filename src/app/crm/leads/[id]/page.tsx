@@ -55,6 +55,8 @@ export default function LeadDetailPage() {
   const [visitForm, setVisitForm] = useState({ project_id: '', visit_date: '', notes: '' });
   const [projects, setProjects] = useState<any[]>([]);
 
+  const readOnly = user?.role === 'head_sales';
+
   useEffect(() => {
     const stored = localStorage.getItem('crm_user');
     if (stored) setUser(JSON.parse(stored));
@@ -273,8 +275,8 @@ export default function LeadDetailPage() {
           </select>
           <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" style={{ padding: '8px 20px', borderRadius: '50px', backgroundColor: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.3)', color: '#25D366', textDecoration: 'none', fontSize: '13px', fontWeight: 600 }}>{t('whatsapp', locale)}</a>
           <a href={`tel:${lead.phone}`} style={{ padding: '8px 20px', borderRadius: '50px', backgroundColor: 'rgba(74,144,217,0.1)', border: '1px solid rgba(74,144,217,0.3)', color: '#4A90D9', textDecoration: 'none', fontSize: '13px', fontWeight: 600 }}>{t('call', locale)}</a>
-          <button onClick={() => setShowVisitForm(true)} style={{ padding: '8px 20px', borderRadius: '50px', backgroundColor: 'rgba(230,126,34,0.1)', border: '1px solid rgba(230,126,34,0.3)', color: '#E67E22', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontSize: '13px', fontWeight: 600 }}>{t('site_visit_btn', locale)}</button>
-          {user?.role !== 'sales' && (
+          {!readOnly && <button onClick={() => setShowVisitForm(true)} style={{ padding: '8px 20px', borderRadius: '50px', backgroundColor: 'rgba(230,126,34,0.1)', border: '1px solid rgba(230,126,34,0.3)', color: '#E67E22', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontSize: '13px', fontWeight: 600 }}>{t('site_visit_btn', locale)}</button>}
+          {user?.role !== 'sales' && !readOnly && (
             <button onClick={() => setEditing(!editing)} style={{ padding: '8px 20px', borderRadius: '50px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontSize: '13px' }}>
               {t('edit', locale)}
             </button>
@@ -347,12 +349,14 @@ export default function LeadDetailPage() {
                     ))}
                     {comments.length === 0 && <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '20px' }}>{t('no_comments', locale)}</p>}
                   </div>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <textarea value={newComment} onChange={e => setNewComment(e.target.value)} placeholder={t('write_comment', locale)} rows={2} style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px', fontFamily: 'Cairo, sans-serif', outline: 'none', resize: 'none' }} />
-                    <button onClick={handleAddComment} disabled={saving || !newComment.trim()} style={{ padding: '10px 20px', borderRadius: '10px', backgroundColor: '#1B4B8A', border: 'none', color: 'white', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontWeight: 700, alignSelf: 'flex-end' }}>
-                      {t('send', locale)}
-                    </button>
-                  </div>
+                  {!readOnly && (
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <textarea value={newComment} onChange={e => setNewComment(e.target.value)} placeholder={t('write_comment', locale)} rows={2} style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px', fontFamily: 'Cairo, sans-serif', outline: 'none', resize: 'none' }} />
+                      <button onClick={handleAddComment} disabled={saving || !newComment.trim()} style={{ padding: '10px 20px', borderRadius: '10px', backgroundColor: '#1B4B8A', border: 'none', color: 'white', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontWeight: 700, alignSelf: 'flex-end' }}>
+                        {t('send', locale)}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -375,7 +379,7 @@ export default function LeadDetailPage() {
                       <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '20px' }}>لا يوجد محادثات واتساب مسجلة</p>
                     )}
                   </div>
-                  <div style={{ marginBottom: '16px', padding: '14px', borderRadius: '12px', backgroundColor: 'rgba(37,211,102,0.06)', border: '1px solid rgba(37,211,102,0.15)' }}>
+                  {!readOnly && <><div style={{ marginBottom: '16px', padding: '14px', borderRadius: '12px', backgroundColor: 'rgba(37,211,102,0.06)', border: '1px solid rgba(37,211,102,0.15)' }}>
                     <p style={{ color: '#25D366', fontSize: '12px', fontWeight: 700, margin: '0 0 10px' }}>
                       {locale === 'ar' ? '⚡ قوالب رسائل سريعة' : '⚡ Quick Message Templates'}
                     </p>
@@ -439,6 +443,7 @@ export default function LeadDetailPage() {
                       {saving ? t('saving', locale) : '💬 حفظ المحادثة'}
                     </button>
                   </div>
+                  </>}
                 </div>
               )}
 
@@ -465,7 +470,7 @@ export default function LeadDetailPage() {
                     ))}
                     {calls.length === 0 && <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '20px' }}>لا يوجد مكالمات مسجلة</p>}
                   </div>
-                  <div style={{ padding: '16px', borderRadius: '12px', backgroundColor: 'rgba(74,144,217,0.04)', border: '1px solid rgba(74,144,217,0.15)' }}>
+                  {!readOnly && <div style={{ padding: '16px', borderRadius: '12px', backgroundColor: 'rgba(74,144,217,0.04)', border: '1px solid rgba(74,144,217,0.15)' }}>
                     <p style={{ color: '#4A90D9', fontSize: '12px', fontWeight: 700, margin: '0 0 12px' }}>{locale === 'ar' ? '📞 تسجيل مكالمة جديدة' : '📞 Log New Call'}</p>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                       <div>
@@ -492,7 +497,7 @@ export default function LeadDetailPage() {
                     <button onClick={handleAddCall} disabled={saving || !newCall.notes.trim()} style={{ width: '100%', padding: '12px', borderRadius: '10px', backgroundColor: '#1B4B8A', border: 'none', color: 'white', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: '14px' }}>
                       {saving ? t('saving', locale) : locale === 'ar' ? '📞 تسجيل المكالمة' : '📞 Log Call'}
                     </button>
-                  </div>
+                  </div>}
                 </div>
               )}
 
@@ -513,13 +518,15 @@ export default function LeadDetailPage() {
                     ))}
                     {reminders.length === 0 && <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '20px' }}>لا يوجد تذكيرات</p>}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    <input type="datetime-local" value={newReminder.date} onChange={e => setNewReminder({ ...newReminder, date: e.target.value })} style={{ ...inputStyle, colorScheme: 'dark' }} />
-                    <input value={newReminder.note} onChange={e => setNewReminder({ ...newReminder, note: e.target.value })} placeholder="ملاحظة التذكير" style={inputStyle} />
-                    <button onClick={handleAddReminder} style={{ gridColumn: '1/-1', padding: '10px', borderRadius: '10px', backgroundColor: '#C9A84C', border: 'none', color: 'white', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontWeight: 700 }}>
-                      + إضافة تذكير
-                    </button>
-                  </div>
+                  {!readOnly && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <input type="datetime-local" value={newReminder.date} onChange={e => setNewReminder({ ...newReminder, date: e.target.value })} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                      <input value={newReminder.note} onChange={e => setNewReminder({ ...newReminder, note: e.target.value })} placeholder="ملاحظة التذكير" style={inputStyle} />
+                      <button onClick={handleAddReminder} style={{ gridColumn: '1/-1', padding: '10px', borderRadius: '10px', backgroundColor: '#C9A84C', border: 'none', color: 'white', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontWeight: 700 }}>
+                        + إضافة تذكير
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -599,7 +606,7 @@ export default function LeadDetailPage() {
           )}
 
           {/* Send Unit Details */}
-          {availableUnits.length > 0 && (
+          {!readOnly && availableUnits.length > 0 && (
             <div style={{ padding: '20px', borderRadius: '16px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
               <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#25D366', marginBottom: '12px' }}>{t('send_unit', locale)}</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
