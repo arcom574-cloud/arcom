@@ -149,9 +149,17 @@ export default function SettingsPage() {
         <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', margin: 0, lineHeight: 1.8 }}>
           💡 لازم تجيب الـ Access Token من Meta Business Manager أو Google Ads Manager الأول. بعد الحفظ، النظام هيبدأ يستقبل الليدز الجديدة من الفورمات بتاعتك تلقائياً.
           <br /><br />
-          🔗 <strong>Facebook Webhook URL:</strong> <span style={{ direction: 'ltr', display: 'inline' }}>https://www.arcomdevelopments.com/api/webhooks/facebook</span>
+          🔗 <strong>Facebook Webhook (بدون فرع):</strong> <span style={{ direction: 'ltr', display: 'inline' }}>https://www.arcomdevelopments.com/api/webhooks/facebook</span>
           <br />
-          🔗 <strong>Google Webhook URL:</strong> <span style={{ direction: 'ltr', display: 'inline' }}>https://www.arcomdevelopments.com/api/webhooks/google</span>
+          🔗 <strong>Facebook (الفرع الرئيسي):</strong> <span style={{ direction: 'ltr', display: 'inline' }}>https://www.arcomdevelopments.com/api/webhooks/facebook?branch=الفرع الرئيسي</span>
+          <br />
+          🔗 <strong>Facebook (الفرع الثاني):</strong> <span style={{ direction: 'ltr', display: 'inline' }}>https://www.arcomdevelopments.com/api/webhooks/facebook?branch=الفرع الثاني</span>
+          <br /><br />
+          🔗 <strong>Google Webhook (بدون فرع):</strong> <span style={{ direction: 'ltr', display: 'inline' }}>https://www.arcomdevelopments.com/api/webhooks/google</span>
+          <br />
+          🔗 <strong>Google (الفرع الرئيسي):</strong> <span style={{ direction: 'ltr', display: 'inline' }}>https://www.arcomdevelopments.com/api/webhooks/google?branch=الفرع الرئيسي</span>
+          <br />
+          🔗 <strong>Google (الفرع الثاني):</strong> <span style={{ direction: 'ltr', display: 'inline' }}>https://www.arcomdevelopments.com/api/webhooks/google?branch=الفرع الثاني</span>
         </p>
       </div>
 

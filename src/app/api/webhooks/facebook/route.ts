@@ -47,6 +47,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ status: 'ignored' });
     }
 
+    // Get branch from URL param
+    const branchParam = req.nextUrl.searchParams.get('branch');
+    let branchId: string | null = null;
+    if (branchParam) {
+      const { data: branchData } = await supabase.from('branches').select('id').eq('name', branchParam).single();
+      if (branchData) branchId = branchData.id;
+    }
+
     const { data: integration } = await supabase
       .from('ad_integrations')
       .select('*')
@@ -95,6 +103,7 @@ export async function POST(req: NextRequest) {
           external_id: `fb_${leadgenId}`,
           notes: `Facebook Lead Ad - Form: ${change.value?.form_id || ''}`,
           assigned_to: null,
+          branch_id: branchId,
         });
 
         const { data: admins } = await supabase.from('crm_users').select('id').eq('role', 'superadmin').eq('active', true);

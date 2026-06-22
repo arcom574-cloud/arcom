@@ -16,6 +16,13 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
+    const branchParam = req.nextUrl.searchParams.get('branch');
+    let branchId: string | null = null;
+    if (branchParam) {
+      const { data: branchData } = await supabase.from('branches').select('id').eq('name', branchParam).single();
+      if (branchData) branchId = branchData.id;
+    }
+
     const { data: integration } = await supabase
       .from('ad_integrations')
       .select('*')
@@ -57,6 +64,7 @@ export async function POST(req: NextRequest) {
       status: 'new',
       external_id: leadId ? externalId : null,
       notes: `Google Ads Lead Form - Campaign: ${body.campaign_id || ''}`,
+      branch_id: branchId,
       assigned_to: null,
     });
 
