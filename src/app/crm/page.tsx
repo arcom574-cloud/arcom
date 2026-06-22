@@ -326,6 +326,63 @@ export default function CRMDashboard() {
             );
           })}
         </div>
+
+        {/* Leads Table (read-only) */}
+        {leads.length > 0 && (
+          <div style={{ marginTop: '32px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 16px', color: 'white' }}>
+              {locale === 'ar' ? `📋 جميع الليدز (${leads.length})` : `📋 All Leads (${leads.length})`}
+            </h2>
+            <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
+                    {[locale === 'ar' ? 'العميل' : 'Client', locale === 'ar' ? 'السيلز' : 'Sales Rep', locale === 'ar' ? 'المرحلة' : 'Stage', locale === 'ar' ? 'آخر تواصل' : 'Last Contact', ''].map(h => (
+                      <th key={h} style={{ padding: '12px 16px', textAlign: dir === 'rtl' ? 'right' : 'left', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.5px' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {leads.map(lead => {
+                    const stageInfo = stages.find(st => st.key === lead.status);
+                    const rep = salesPerf.find(s => s.id === lead.assigned_to);
+                    const daysSince = lead.last_contact_at ? Math.floor((Date.now() - new Date(lead.last_contact_at).getTime()) / (1000 * 60 * 60 * 24)) : null;
+                    return (
+                      <tr key={lead.id} style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                        <td style={{ padding: '12px 16px' }}>
+                          <p style={{ fontSize: '13px', fontWeight: 600, color: 'white', margin: '0 0 2px' }}>{lead.name}</p>
+                          <p style={{ fontSize: '11px', color: '#4A90D9', margin: 0, direction: 'ltr' }}>{lead.phone}</p>
+                        </td>
+                        <td style={{ padding: '12px 16px', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
+                          {rep?.name || (lead.crm_users as any)?.name || '-'}
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <span style={{ backgroundColor: `${stageInfo?.color || '#888'}15`, border: `1px solid ${stageInfo?.color || '#888'}30`, borderRadius: '50px', padding: '3px 10px', color: stageInfo?.color || '#888', fontSize: '10px', fontWeight: 600 }}>
+                            {statusLabelMap[lead.status] || lead.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          {daysSince !== null ? (
+                            <span style={{ fontSize: '11px', color: daysSince > 3 ? '#ff4444' : daysSince > 1 ? '#F39C12' : '#25D366', fontWeight: 600 }}>
+                              {daysSince === 0 ? (locale === 'ar' ? 'اليوم' : 'Today') : daysSince === 1 ? (locale === 'ar' ? 'أمس' : 'Yesterday') : `${daysSince} ${locale === 'ar' ? 'يوم' : 'days'}`}
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)' }}>-</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <a href={`/crm/leads/${lead.id}`} style={{ padding: '5px 12px', borderRadius: '8px', backgroundColor: 'rgba(74,144,217,0.1)', border: '1px solid rgba(74,144,217,0.2)', color: '#4A90D9', textDecoration: 'none', fontSize: '11px' }}>
+                            {locale === 'ar' ? 'تفاصيل' : 'Details'}
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
