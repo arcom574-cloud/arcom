@@ -56,6 +56,13 @@ export async function POST(req: NextRequest) {
       fields[key] = col.string_value || col.value || '';
     }
 
+    const campaignId = body.campaign_id || body.form_id || '';
+    let leadBranchId = branchId;
+    if (!leadBranchId && campaignId) {
+      const { data: mapping } = await supabase.from('ad_form_branches').select('branch_id').eq('form_id', campaignId).single();
+      if (mapping) leadBranchId = mapping.branch_id;
+    }
+
     await supabase.from('leads').insert({
       name: fields.full_name || fields.name || 'Google Lead',
       phone: fields.phone_number || fields.phone || '',
@@ -63,8 +70,8 @@ export async function POST(req: NextRequest) {
       source: 'google',
       status: 'new',
       external_id: leadId ? externalId : null,
-      notes: `Google Ads Lead Form - Campaign: ${body.campaign_id || ''}`,
-      branch_id: branchId,
+      notes: `Google Ads Lead Form - Campaign: ${campaignId}`,
+      branch_id: leadBranchId,
       assigned_to: null,
     });
 

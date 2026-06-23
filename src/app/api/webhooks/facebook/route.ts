@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ status: 'ignored' });
     }
 
-    // Get branch from URL param
+    // Get branch from URL param OR from ad_form_branches mapping
     const branchParam = req.nextUrl.searchParams.get('branch');
     let branchId: string | null = null;
     if (branchParam) {
@@ -94,6 +94,15 @@ export async function POST(req: NextRequest) {
         }
 
         const leadName = fields.full_name || fields.first_name || 'Facebook Lead';
+        const formId = change.value?.form_id || '';
+
+        // Auto-detect branch from form_id mapping
+        let leadBranchId = branchId;
+        if (!leadBranchId && formId) {
+          const { data: mapping } = await supabase.from('ad_form_branches').select('branch_id').eq('form_id', formId).single();
+          if (mapping) leadBranchId = mapping.branch_id;
+        }
+
         await supabase.from('leads').insert({
           name: leadName,
           phone: fields.phone_number || fields.phone || '',
@@ -101,9 +110,9 @@ export async function POST(req: NextRequest) {
           source: 'facebook',
           status: 'new',
           external_id: `fb_${leadgenId}`,
-          notes: `Facebook Lead Ad - Form: ${change.value?.form_id || ''}`,
+          notes: `Facebook Lead Ad - Form: ${formId}`,
           assigned_to: null,
-          branch_id: branchId,
+          branch_id: leadBranchId,
         });
 
         const { data: admins } = await supabase.from('crm_users').select('id').eq('role', 'superadmin').eq('active', true);

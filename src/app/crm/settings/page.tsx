@@ -37,6 +37,9 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [formMappings, setFormMappings] = useState<any[]>([]);
+  const [newMapping, setNewMapping] = useState({ form_id: '', branch_id: '', platform: 'facebook', label: '' });
 
   useEffect(() => {
     const stored = localStorage.getItem('crm_user');
@@ -50,6 +53,10 @@ export default function SettingsPage() {
   const load = async () => {
     const { data } = await supabaseAdmin.from('ad_integrations').select('*');
     if (data) setIntegrations(data);
+    const { data: branchData } = await supabaseAdmin.from('branches').select('*');
+    if (branchData) setBranches(branchData);
+    const { data: mappingData } = await supabaseAdmin.from('ad_form_branches').select('*, branches(name)');
+    if (mappingData) setFormMappings(mappingData);
     setLoading(false);
   };
 
@@ -268,6 +275,72 @@ export default function SettingsPage() {
           );
         })}
       </div>
+
+      {/* Form → Branch Mapping */}
+      {branches.length > 0 && (
+        <div style={{ marginTop: '32px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>🔗 ربط الفورمات بالفروع</h2>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', marginBottom: '20px' }}>
+            حط Form ID أو Campaign ID من فيسبوك أو جوجل وحدد الفرع — الليدز هتروح للفرع الصح أوتوماتيك
+          </p>
+
+          {/* Existing Mappings */}
+          {formMappings.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+              {formMappings.map((m: any) => (
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <span style={{ fontSize: '16px' }}>{m.platform === 'facebook' ? '📘' : '🔴'}</span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: '13px', fontWeight: 600, color: 'white', margin: '0 0 2px' }}>{m.label || m.form_id}</p>
+                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: 0, direction: 'ltr' }}>ID: {m.form_id}</p>
+                  </div>
+                  <span style={{ backgroundColor: 'rgba(155,89,182,0.15)', border: '1px solid rgba(155,89,182,0.3)', borderRadius: '50px', padding: '3px 12px', fontSize: '11px', color: '#9B59B6' }}>
+                    🏢 {(m.branches as any)?.name || ''}
+                  </span>
+                  <button onClick={async () => { await supabaseAdmin.from('ad_form_branches').delete().eq('id', m.id); load(); }} style={{ padding: '4px 10px', borderRadius: '6px', backgroundColor: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.2)', color: '#ff4444', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontSize: '11px' }}>حذف</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add New Mapping */}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div style={{ flex: 1, minWidth: '120px' }}>
+              <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '4px' }}>المنصة</label>
+              <select value={newMapping.platform} onChange={e => setNewMapping({ ...newMapping, platform: e.target.value })} style={{ ...inputStyle, cursor: 'pointer' }}>
+                <option value="facebook" style={{ backgroundColor: '#0A0F1A' }}>📘 Facebook</option>
+                <option value="google" style={{ backgroundColor: '#0A0F1A' }}>🔴 Google</option>
+              </select>
+            </div>
+            <div style={{ flex: 2, minWidth: '180px' }}>
+              <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '4px' }}>Form / Campaign ID</label>
+              <input value={newMapping.form_id} onChange={e => setNewMapping({ ...newMapping, form_id: e.target.value })} placeholder="1234567890" style={{ ...inputStyle, direction: 'ltr' }} />
+            </div>
+            <div style={{ flex: 1, minWidth: '150px' }}>
+              <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '4px' }}>اسم (اختياري)</label>
+              <input value={newMapping.label} onChange={e => setNewMapping({ ...newMapping, label: e.target.value })} placeholder="مثلاً: إعلان برج الأعمال" style={inputStyle} />
+            </div>
+            <div style={{ flex: 1, minWidth: '150px' }}>
+              <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', display: 'block', marginBottom: '4px' }}>الفرع</label>
+              <select value={newMapping.branch_id} onChange={e => setNewMapping({ ...newMapping, branch_id: e.target.value })} style={{ ...inputStyle, cursor: 'pointer' }}>
+                <option value="" style={{ backgroundColor: '#0A0F1A' }}>اختر فرع</option>
+                {branches.map((b: any) => <option key={b.id} value={b.id} style={{ backgroundColor: '#0A0F1A' }}>🏢 {b.name}</option>)}
+              </select>
+            </div>
+            <button onClick={async () => {
+              if (!newMapping.form_id || !newMapping.branch_id) return;
+              await supabaseAdmin.from('ad_form_branches').insert({
+                form_id: newMapping.form_id, branch_id: newMapping.branch_id,
+                platform: newMapping.platform, label: newMapping.label,
+              });
+              setNewMapping({ form_id: '', branch_id: '', platform: 'facebook', label: '' });
+              load();
+            }} disabled={!newMapping.form_id || !newMapping.branch_id} style={{ padding: '10px 20px', borderRadius: '10px', backgroundColor: '#1B4B8A', border: 'none', color: 'white', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: '13px', whiteSpace: 'nowrap' }}>
+              + إضافة
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
